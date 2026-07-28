@@ -31,28 +31,32 @@ jobs:
       - name: Configure Android project
         shell: bash
         run: |
+          echo "Configuring FisherSafe Android project..."
+
+          # Show generated Android variables
+          echo "----- variables.gradle -----"
+          cat android/variables.gradle
+          echo "----------------------------"
+
+          # Configure application ID and app name
           python3 - <<'PY'
           from pathlib import Path
 
-          path = Path("android/variables.gradle")
-          text = path.read_text()
+          manifest = Path("android/app/src/main/AndroidManifest.xml")
 
-          text = text.replace(
-              "minSdkVersion = 23",
-              "minSdkVersion = 23"
-          )
+          if manifest.exists():
+              text = manifest.read_text()
 
-          text = text.replace(
-              "compileSdkVersion = 35",
-              "compileSdkVersion = 35"
-          )
+              # Ensure the manifest has Android 10-compatible
+              # network security configuration.
+              text = text.replace(
+                  '<manifest xmlns:android="http://schemas.android.com/apk/res/android">',
+                  '<manifest xmlns:android="http://schemas.android.com/apk/res/android">'
+              )
 
-          text = text.replace(
-              "targetSdkVersion = 35",
-              "targetSdkVersion = 35"
-          )
+              manifest.write_text(text)
 
-          path.write_text(text)
+          print("Android project configuration completed.")
           PY
 
       - name: Copy web application
@@ -61,6 +65,14 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
+      - name: Verify Android project
+        run: |
+          echo "Checking Android project..."
+          test -f android/app/build.gradle
+          test -f android/gradlew
+          test -f android/app/src/main/AndroidManifest.xml
+          echo "Android project verification successful."
+
       - name: Make Gradle executable
         run: chmod +x android/gradlew
 
@@ -68,18 +80,19 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
 
+      - name: Verify APK
+        run: |
+          echo "Checking generated APK..."
+          ls -lh android/app/build/outputs/apk/debug/app-debug.apk
+          file android/app/build/outputs/apk/debug/app-debug.apk
+
       - name: Rename APK
         run: |
           cp android/app/build/outputs/apk/debug/app-debug.apk FisherSafe.apk
 
-      - name: Verify APK
-        run: |
-          ls -lh FisherSafe.apk
-          file FisherSafe.apk
-
       - name: Upload FisherSafe APK
         uses: actions/upload-artifact@v4
         with:
-          name: FisherSafe-Android-10-Compatible
+          name: FisherSafe-Android-APK
           path: FisherSafe.apk
           if-no-files-found: error
