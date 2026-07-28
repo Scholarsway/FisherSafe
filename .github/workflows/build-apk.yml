@@ -28,15 +28,58 @@ jobs:
       - name: Create Android project
         run: npx cap add android
 
-      - name: Copy web app
+      - name: Configure Android project
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("android/variables.gradle")
+          text = path.read_text()
+
+          text = text.replace(
+              "minSdkVersion = 23",
+              "minSdkVersion = 23"
+          )
+
+          text = text.replace(
+              "compileSdkVersion = 35",
+              "compileSdkVersion = 35"
+          )
+
+          text = text.replace(
+              "targetSdkVersion = 35",
+              "targetSdkVersion = 35"
+          )
+
+          path.write_text(text)
+          PY
+
+      - name: Copy web application
         run: npx cap copy android
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Make Gradle executable
+        run: chmod +x android/gradlew
 
       - name: Build debug APK
         working-directory: android
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --no-daemon
 
-      - name: Upload APK
+      - name: Rename APK
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk FisherSafe.apk
+
+      - name: Verify APK
+        run: |
+          ls -lh FisherSafe.apk
+          file FisherSafe.apk
+
+      - name: Upload FisherSafe APK
         uses: actions/upload-artifact@v4
         with:
-          name: FisherSafe-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: FisherSafe-Android-10-Compatible
+          path: FisherSafe.apk
+          if-no-files-found: error
