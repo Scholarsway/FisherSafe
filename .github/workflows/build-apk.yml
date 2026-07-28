@@ -1,98 +1,192 @@
-name: Build FisherSafe APK
+name: Build FisherSafe Release APK
 
 on:
   workflow_dispatch:
 
 jobs:
   build:
+    name: Build Signed FisherSafe APK
     runs-on: ubuntu-latest
 
     steps:
+
+      # ---------------------------------------------------------
+      # 1. Download project from GitHub
+      # ---------------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v5
 
+
+      # ---------------------------------------------------------
+      # 2. Install Node.js
+      # ---------------------------------------------------------
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: 22
 
+
+      # ---------------------------------------------------------
+      # 3. Install Java 21
+      # ---------------------------------------------------------
       - name: Setup Java
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
 
+
+      # ---------------------------------------------------------
+      # 4. Install project dependencies
+      # ---------------------------------------------------------
       - name: Install dependencies
         run: npm install
 
+
+      # ---------------------------------------------------------
+      # 5. Create Android project using Capacitor
+      # ---------------------------------------------------------
       - name: Create Android project
         run: npx cap add android
 
-      - name: Configure Android project
-        shell: bash
-        run: |
-          echo "Configuring FisherSafe Android project..."
 
-          # Show generated Android variables
-          echo "----- variables.gradle -----"
-          cat android/variables.gradle
-          echo "----------------------------"
-
-          # Configure application ID and app name
-          python3 - <<'PY'
-          from pathlib import Path
-
-          manifest = Path("android/app/src/main/AndroidManifest.xml")
-
-          if manifest.exists():
-              text = manifest.read_text()
-
-              # Ensure the manifest has Android 10-compatible
-              # network security configuration.
-              text = text.replace(
-                  '<manifest xmlns:android="http://schemas.android.com/apk/res/android">',
-                  '<manifest xmlns:android="http://schemas.android.com/apk/res/android">'
-              )
-
-              manifest.write_text(text)
-
-          print("Android project configuration completed.")
-          PY
-
+      # ---------------------------------------------------------
+      # 6. Copy FisherSafe web application
+      # ---------------------------------------------------------
       - name: Copy web application
         run: npx cap copy android
 
+
+      # ---------------------------------------------------------
+      # 7. Synchronize Capacitor Android project
+      # ---------------------------------------------------------
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Verify Android project
-        run: |
-          echo "Checking Android project..."
-          test -f android/app/build.gradle
-          test -f android/gradlew
-          test -f android/app/src/main/AndroidManifest.xml
-          echo "Android project verification successful."
 
+      # ---------------------------------------------------------
+      # 8. Make Gradle executable
+      # ---------------------------------------------------------
       - name: Make Gradle executable
         run: chmod +x android/gradlew
 
-      - name: Build debug APK
-        working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
 
-      - name: Verify APK
+      # ---------------------------------------------------------
+      # 9. Generate temporary signing keystore
+      # ---------------------------------------------------------
+      - name: Generate Android signing keystore
         run: |
-          echo "Checking generated APK..."
-          ls -lh android/app/build/outputs/apk/debug/app-debug.apk
-          file android/app/build/outputs/apk/debug/app-debug.apk
+          keytool -genkeypair \
+            -v \
+            -keystore fishersafe-release.keystore \
+            -alias fishersafe \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass fishersafe123 \
+            -keypass fishersafe123 \
+            -dname "CN=FisherSafe, OU=Research Project, O=Scholarsway, L=Abuja, ST=FCT, C=NG"
 
+
+      # ---------------------------------------------------------
+      # 10. Copy keystore into Android project
+      # ---------------------------------------------------------
+      - name: Copy keystore
+        run: |
+          cp fishersafe-release.keystore android/app/fishersafe-release.keystore
+
+
+      # ---------------------------------------------------------
+      # 11. Configure release signing
+      # ---------------------------------------------------------
+      - name: Configure Android release signing
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("android/app/build.gradle")
+          text = path.read_text()
+
+          signing_config = r'''
+              signingConfigs {
+                  release {
+                      storeFile file("fishersafe-release.keystore")
+                      storePassword "fishersafe123"
+                      keyAlias "fishersafe"
+                      keyPassword "fishersafe123"
+                  }
+              }
+          '''
+
+          if "signingConfigs {" not in text:
+              text = text.replace(
+                  "android {",
+                  "android {" + signing_config,
+                  1
+              )
+
+          text = text.replace(
+              "buildTypes {",
+              """buildTypes {
+                  release {
+                      signingConfig signingConfigs.release
+                      minifyEnabled false
+                      shrinkResources false
+                  }
+              """,
+              1
+          )
+
+          path.write_text(text)
+          PY
+
+
+      # ---------------------------------------------------------
+      # 12. Build signed release APK
+      # ---------------------------------------------------------
+      - name: Build signed release APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon
+
+
+      # ---------------------------------------------------------
+      # 13. Verify release APK
+      # ---------------------------------------------------------
+      - name: Verify release APK
+        run: |
+          echo "Checking generated release APK..."
+          ls -lh android/app/build/outputs/apk/release/
+
+          test -f android/app/build/outputs/apk/release/app-release.apk
+
+          echo "Release APK successfully generated."
+
+
+      # ---------------------------------------------------------
+      # 14. Rename APK
+      # ---------------------------------------------------------
       - name: Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk FisherSafe.apk
+          cp android/app/build/outputs/apk/release/app-release.apk FisherSafe-release.apk
 
-      - name: Upload FisherSafe APK
+
+      # ---------------------------------------------------------
+      # 15. Check APK file
+      # ---------------------------------------------------------
+      - name: Check final APK
+        run: |
+          echo "Final FisherSafe APK:"
+          ls -lh FisherSafe-release.apk
+          file FisherSafe-release.apk
+
+
+      # ---------------------------------------------------------
+      # 16. Upload final signed APK
+      # ---------------------------------------------------------
+      - name: Upload FisherSafe Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: FisherSafe-Android-APK
-          path: FisherSafe.apk
+          name: FisherSafe-release-APK
+          path: FisherSafe-release.apk
           if-no-files-found: error
