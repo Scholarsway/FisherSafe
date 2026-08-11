@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -45,7 +46,14 @@ input,select,textarea{width:100%;padding:11px;margin:6px 0 12px;border:1px solid
 <button class="action" id="startBtn">▶ Start Monitoring</button>
 <button class="action danger" id="stopBtn">■ Stop Monitoring</button>
 </div>
-<div class="card"><h2>🚨 Current Threat Assessment</h2><div id="currentThreat" class="result safe"><h3>SYSTEM READY</h3><p>Enable permissions and start monitoring.</p></div></div>
+
+<div class="card"><h2>🚨 Real-Time Threat Report</h2>
+<div id="currentThreat" class="result safe">
+<h3>SYSTEM READY</h3>
+<p>Enable permissions and start monitoring.</p>
+</div>
+</div>
+
 <div class="card"><h2>📖 How the System Works</h2>
 <p><b>Accelerometer:</b> measures movement and vibration. <b>Gyroscope:</b> measures rotational movement. <b>Orientation:</b> estimates device position. <b>GPS:</b> provides location and speed where available. <b>Microphone:</b> requests audio access for future acoustic-event detection. <b>Battery:</b> indicates remaining power.</p>
 <p>The current prototype uses explainable rule-based detection so it can operate offline. The architecture can later accept a trained on-device ML model.</p></div>
@@ -74,14 +82,17 @@ input,select,textarea{width:100%;padding:11px;margin:6px 0 12px;border:1px solid
 </section>
 
 <section id="classification" class="page">
-<div class="card"><h2>🧠 Manual Threat Classification</h2><p>Enter observed conditions. The system assigns a risk score and explains why the condition was classified as normal, warning, or emergency.</p>
+<div class="card"><h2>🧠 ML Threat Classification</h2>
+<p>Enter observed conditions. The system assigns a risk score and explains why the condition was classified as normal, warning, or emergency.</p>
 <label>Wave Intensity</label><select id="wave"><option value="0">Calm</option><option value="1">Moderate</option><option value="2">Severe</option></select>
 <label>Motion Intensity</label><select id="motion"><option value="0">Normal</option><option value="1">Unusual</option><option value="2">Extreme</option></select>
 <label>GPS Status</label><select id="gpsRisk"><option value="0">Normal Location</option><option value="1">Unexpected Location</option><option value="2">Location Unavailable</option></select>
 <label>Audio Condition</label><select id="audio"><option value="0">Normal</option><option value="1">Loud / Unusual Sound</option><option value="2">Possible Distress Sound</option></select>
 <label>Engine / Operational Condition</label><select id="engine"><option value="0">Normal</option><option value="1">Mechanical Problem</option><option value="2">Engine Failure</option></select>
 <label>Human Observation</label><select id="human"><option value="0">No Immediate Danger</option><option value="1">Possible Danger</option><option value="2">Confirmed Emergency</option></select>
-<button class="action" id="classifyBtn">🔍 Classify Threat</button><div id="manualResult"></div></div>
+<button class="action" id="classifyBtn">🔍 Classify Threat</button>
+<div id="manualResult"></div>
+</div>
 </section>
 
 <section id="emergency" class="page">
@@ -93,98 +104,963 @@ input,select,textarea{width:100%;padding:11px;margin:6px 0 12px;border:1px solid
 <button class="action danger" id="smsBtn">📱 Send via Phone SMS</button>
 <button class="action secondary" id="copyBtn">📋 Copy Message</button>
 <button class="action success" id="shareBtn">📤 Share Message</button>
-<div id="smsStatus"></div></div>
+<div id="smsStatus"></div>
+</div>
 </section>
 
 <section id="history" class="page">
 <div class="card"><h2>📊 Threat Detection History</h2><p>Records are stored locally on the device. No internet connection is required to retain history.</p>
-<button class="action" id="csvBtn">⬇ Download CSV</button><button class="action" id="jsonBtn">⬇ Download JSON</button><button class="action danger" id="clearBtn">Clear History</button>
-<div id="historyList"></div></div>
+<button class="action" id="csvBtn">⬇ Download CSV</button>
+<button class="action" id="jsonBtn">⬇ Download JSON</button>
+<button class="action danger" id="clearBtn">Clear History</button>
+<div id="historyList"></div>
+</div>
 </section>
 
 <section id="about" class="page">
-<div class="card"><h2>⚓ About FisherSafe</h2><p>FisherSafe is a student research prototype for offline maritime threat detection and emergency alerting for small-scale fishermen in remote, low-connectivity environments.</p>
-<h3>Research Features</h3><ul><li>Multi-sensor monitoring</li><li>Explainable local threat classification</li><li>Offline local storage</li><li>Emergency alert preparation</li><li>Research data export</li><li>Future on-device ML integration</li></ul>
-<p><b>Important:</b> This prototype is a research aid and should not be treated as a replacement for established maritime emergency services.</p></div>
+<div class="card"><h2>⚓ About FisherSafe</h2>
+<p>FisherSafe is a student research prototype for offline maritime threat detection and emergency alerting for small-scale fishermen in remote, low-connectivity environments.</p>
+<h3>Research Features</h3>
+<ul>
+<li>Multi-sensor monitoring</li>
+<li>Explainable local threat classification</li>
+<li>Offline local storage</li>
+<li>Emergency alert preparation</li>
+<li>Research data export</li>
+<li>Future on-device ML integration</li>
+</ul>
+<p><b>Important:</b> This prototype is a research aid and should not be treated as a replacement for established maritime emergency services.</p>
+</div>
 </section>
 
-</main><div id="toast"></div>
+</main>
+<div id="toast"></div>
+
 <script>
 const pages=["dashboard","sensors","classification","emergency","history","about"];
-const navLabels=["Dashboard","Live Sensors","Threat Classification","Emergency Alert","Threat History","About"];
+const navLabels=["Dashboard","Live Sensors","ML Threat Classification","Emergency Alert","Threat History","About"];
 const nav=document.getElementById("nav");
-pages.forEach((p,i)=>{const b=document.createElement("button");b.textContent=navLabels[i];b.onclick=()=>showPage(p);b.id="n-"+p;nav.appendChild(b)});
-function showPage(p){document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));document.getElementById(p).classList.add("active");document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));document.getElementById("n-"+p).classList.add("active");if(p==="history")displayHistory()}
+
+pages.forEach((p,i)=>{
+ const b=document.createElement("button");
+ b.textContent=navLabels[i];
+ b.onclick=()=>showPage(p);
+ b.id="n-"+p;
+ nav.appendChild(b)
+});
+
+function showPage(p){
+ document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+ document.getElementById(p).classList.add("active");
+ document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));
+ document.getElementById("n-"+p).classList.add("active");
+ if(p==="history")displayHistory()
+}
+
 showPage("dashboard");
 
-let monitoring=false, motionActive=false, gyroActive=false, orientationActive=false, gpsActive=false, micActive=false;
-let lastMotion={x:0,y:0,z:0},lastGyro={alpha:0,beta:0,gamma:0},lastOri={alpha:0,beta:0,gamma:0};
-let gps={latitude:null,longitude:null,accuracy:null,speed:null},battery=null,lastThreat={classification:"LOW / NORMAL RISK",score:0,explanation:"System ready."};
-let history=JSON.parse(localStorage.getItem("fisherSafeHistory")||"[]"),lastAutoLog=0;
+let monitoring=false;
+let motionActive=false;
+let gyroActive=false;
+let orientationActive=false;
+let gpsActive=false;
+let micActive=false;
 
-function toast(t){const x=document.getElementById("toast");x.textContent=t;x.style.display="block";setTimeout(()=>x.style.display="none",2600)}
-function setStatus(id,active,text){const e=document.getElementById(id);e.textContent=active?"ACTIVE":"INACTIVE";e.className="value "+(active?"active":"inactive");if(text){const t=document.getElementById(id.replace("Status","Text"));if(t){t.textContent=text;t.className="status "+(active?"active":"inactive")}}}
-function setSensor(id,on){const e=document.getElementById(id);e.textContent=on?"ACTIVE":"INACTIVE";e.className="status "+(on?"active":"inactive")}
+let lastMotion={x:0,y:0,z:0};
+let lastGyro={alpha:0,beta:0,gamma:0};
+let lastOri={alpha:0,beta:0,gamma:0};
+
+let gps={
+ latitude:null,
+ longitude:null,
+ accuracy:null,
+ speed:null
+};
+
+let battery=null;
+
+let lastThreat={
+ classification:"LOW / NORMAL RISK",
+ score:0,
+ explanation:"System ready."
+};
+
+let history=JSON.parse(localStorage.getItem("fisherSafeHistory")||"[]");
+let lastAutoLog=0;
+
+/* 30-second real-time threat cooldown */
+let realTimeCooldownUntil=0;
+let cooldownTimer=null;
+
+function toast(t){
+ const x=document.getElementById("toast");
+ x.textContent=t;
+ x.style.display="block";
+ setTimeout(()=>x.style.display="none",2600)
+}
+
+function setStatus(id,active,text){
+ const e=document.getElementById(id);
+ e.textContent=active?"ACTIVE":"INACTIVE";
+ e.className="value "+(active?"active":"inactive");
+
+ if(text){
+  const t=document.getElementById(id.replace("Status","Text"));
+  if(t){
+   t.textContent=text;
+   t.className="status "+(active?"active":"inactive")
+  }
+ }
+}
+
+function setSensor(id,on){
+ const e=document.getElementById(id);
+ e.textContent=on?"ACTIVE":"INACTIVE";
+ e.className="status "+(on?"active":"inactive")
+}
 
 async function requestMotion(){
  try{
-  if(typeof DeviceMotionEvent==="undefined"){toast("Motion sensors are not available in this environment.");return false}
-  if(typeof DeviceMotionEvent.requestPermission==="function"){const p=await DeviceMotionEvent.requestPermission();if(p!=="granted")throw Error("Motion permission denied")}
-  if(typeof DeviceOrientationEvent?.requestPermission==="function"){const p=await DeviceOrientationEvent.requestPermission();if(p!=="granted")throw Error("Orientation permission denied")}
-  window.addEventListener("devicemotion",handleMotion,true);window.addEventListener("deviceorientation",handleOrientation,true);
+  if(typeof DeviceMotionEvent==="undefined"){
+   toast("Motion sensors are not available in this environment.");
+   return false
+  }
+
+  if(typeof DeviceMotionEvent.requestPermission==="function"){
+   const p=await DeviceMotionEvent.requestPermission();
+   if(p!=="granted")throw Error("Motion permission denied")
+  }
+
+  if(typeof DeviceOrientationEvent?.requestPermission==="function"){
+   const p=await DeviceOrientationEvent.requestPermission();
+   if(p!=="granted")throw Error("Orientation permission denied")
+  }
+
+  window.addEventListener("devicemotion",handleMotion,true);
+  window.addEventListener("deviceorientation",handleOrientation,true);
+
   return true
- }catch(e){toast("Motion permission: "+e.message);return false}
+
+ }catch(e){
+  toast("Motion permission: "+e.message);
+  return false
+ }
 }
+
 function requestGPS(){
  return new Promise(resolve=>{
-  if(!navigator.geolocation){toast("GPS is unavailable.");resolve(false);return}
-  navigator.geolocation.watchPosition(pos=>{gpsActive=true;gps={latitude:pos.coords.latitude,longitude:pos.coords.longitude,accuracy:pos.coords.accuracy,speed:pos.coords.speed};document.getElementById("lat").textContent=gps.latitude.toFixed(6);document.getElementById("lon").textContent=gps.longitude.toFixed(6);document.getElementById("speed").textContent=((gps.speed||0)*3.6).toFixed(2)+" km/h";setStatus("gpsStatus",true,"Receiving GPS");resolve(true)},err=>{setStatus("gpsStatus",false,"GPS unavailable: "+err.message);resolve(false)},{enableHighAccuracy:true,maximumAge:1000,timeout:10000})
+  if(!navigator.geolocation){
+   toast("GPS is unavailable.");
+   resolve(false);
+   return
+  }
+
+  navigator.geolocation.watchPosition(
+   pos=>{
+    gpsActive=true;
+
+    gps={
+     latitude:pos.coords.latitude,
+     longitude:pos.coords.longitude,
+     accuracy:pos.coords.accuracy,
+     speed:pos.coords.speed
+    };
+
+    document.getElementById("lat").textContent=gps.latitude.toFixed(6);
+    document.getElementById("lon").textContent=gps.longitude.toFixed(6);
+    document.getElementById("speed").textContent=((gps.speed||0)*3.6).toFixed(2)+" km/h";
+
+    setStatus("gpsStatus",true,"Receiving GPS");
+
+    resolve(true)
+   },
+   err=>{
+    setStatus("gpsStatus",false,"GPS unavailable: "+err.message);
+    resolve(false)
+   },
+   {
+    enableHighAccuracy:true,
+    maximumAge:1000,
+    timeout:10000
+   }
+  )
  })
 }
+
 async function requestMic(){
- try{const s=await navigator.mediaDevices.getUserMedia({audio:true});s.getTracks().forEach(t=>t.stop());micActive=true;setStatus("micStatus",true,"Permission granted");toast("Microphone permission granted.");return true}catch(e){setStatus("micStatus",false,"Permission denied");return false}
+ try{
+  const s=await navigator.mediaDevices.getUserMedia({audio:true});
+  s.getTracks().forEach(t=>t.stop());
+
+  micActive=true;
+  setStatus("micStatus",true,"Permission granted");
+  toast("Microphone permission granted.");
+
+  return true
+
+ }catch(e){
+  setStatus("micStatus",false,"Permission denied");
+  return false
+ }
 }
+
 async function batteryInit(){
- try{if(navigator.getBattery){const b=await navigator.getBattery();const update=()=>{battery=Math.round(b.level*100);document.getElementById("batteryStatus").textContent=battery+"%";document.getElementById("batteryText").textContent=battery<20?"Low battery":"Available";document.getElementById("batteryText").className="status "+(battery<20?"warn":"active")};b.addEventListener("levelchange",update);update()}else document.getElementById("batteryText").textContent="Battery API unavailable"}catch(e){document.getElementById("batteryText").textContent="Unavailable"}}
-async function permissions(){await requestMotion();await requestGPS();await requestMic();await batteryInit();toast("Permission checks completed.")}
+ try{
+  if(navigator.getBattery){
+   const b=await navigator.getBattery();
+
+   const update=()=>{
+    battery=Math.round(b.level*100);
+    document.getElementById("batteryStatus").textContent=battery+"%";
+    document.getElementById("batteryText").textContent=battery<20?"Low battery":"Available";
+    document.getElementById("batteryText").className="status "+(battery<20?"warn":"active")
+   };
+
+   b.addEventListener("levelchange",update);
+   update()
+  }else{
+   document.getElementById("batteryText").textContent="Battery API unavailable"
+  }
+
+ }catch(e){
+  document.getElementById("batteryText").textContent="Unavailable"
+ }
+}
+
+async function permissions(){
+ await requestMotion();
+ await requestGPS();
+ await requestMic();
+ await batteryInit();
+ toast("Permission checks completed.")
+}
+
 function handleMotion(e){
- const a=e.accelerationIncludingGravity||e.acceleration;if(a){lastMotion={x:+(a.x||0),y:+(a.y||0),z:+(a.z||0)};["X","Y","Z"].forEach((k,i)=>{const v=lastMotion[k.toLowerCase()];document.getElementById("acc"+k).textContent=v.toFixed(2);setSensor("acc"+k+"S",true)});document.getElementById("accMag").textContent=Math.hypot(lastMotion.x,lastMotion.y,lastMotion.z).toFixed(2);motionActive=true;setStatus("motionStatus",true,"Receiving sensor data");detectAuto()}
- const r=e.rotationRate;if(r){lastGyro={alpha:+(r.alpha||0),beta:+(r.beta||0),gamma:+(r.gamma||0)};document.getElementById("gyroA").textContent=lastGyro.alpha.toFixed(2);document.getElementById("gyroB").textContent=lastGyro.beta.toFixed(2);document.getElementById("gyroG").textContent=lastGyro.gamma.toFixed(2);document.getElementById("gyroMag").textContent=Math.hypot(lastGyro.alpha,lastGyro.beta,lastGyro.gamma).toFixed(2);["A","B","G"].forEach(k=>setSensor("gyro"+k+"S",true));gyroActive=true}
+
+ const a=e.accelerationIncludingGravity||e.acceleration;
+
+ if(a){
+
+  lastMotion={
+   x:+(a.x||0),
+   y:+(a.y||0),
+   z:+(a.z||0)
+  };
+
+  ["X","Y","Z"].forEach((k,i)=>{
+   const v=lastMotion[k.toLowerCase()];
+   document.getElementById("acc"+k).textContent=v.toFixed(2);
+   setSensor("acc"+k+"S",true)
+  });
+
+  document.getElementById("accMag").textContent=
+   Math.hypot(lastMotion.x,lastMotion.y,lastMotion.z).toFixed(2);
+
+  motionActive=true;
+
+  setStatus(
+   "motionStatus",
+   true,
+   "Receiving sensor data"
+  );
+
+  detectAuto()
+ }
+
+ const r=e.rotationRate;
+
+ if(r){
+
+  lastGyro={
+   alpha:+(r.alpha||0),
+   beta:+(r.beta||0),
+   gamma:+(r.gamma||0)
+  };
+
+  document.getElementById("gyroA").textContent=lastGyro.alpha.toFixed(2);
+  document.getElementById("gyroB").textContent=lastGyro.beta.toFixed(2);
+  document.getElementById("gyroG").textContent=lastGyro.gamma.toFixed(2);
+
+  document.getElementById("gyroMag").textContent=
+   Math.hypot(
+    lastGyro.alpha,
+    lastGyro.beta,
+    lastGyro.gamma
+   ).toFixed(2);
+
+  ["A","B","G"].forEach(k=>
+   setSensor("gyro"+k+"S",true)
+  );
+
+  gyroActive=true
+ }
+
  diagnostics()
 }
-function handleOrientation(e){lastOri={alpha:+(e.alpha||0),beta:+(e.beta||0),gamma:+(e.gamma||0)};document.getElementById("oriA").textContent=lastOri.alpha.toFixed(2);document.getElementById("oriB").textContent=lastOri.beta.toFixed(2);document.getElementById("oriG").textContent=lastOri.gamma.toFixed(2);orientationActive=true;diagnostics()}
-function diagnostics(){document.getElementById("diagnostics").textContent=`Motion: ${motionActive?"ACTIVE":"INACTIVE"}\nGyroscope: ${gyroActive?"ACTIVE":"INACTIVE"}\nOrientation: ${orientationActive?"ACTIVE":"INACTIVE"}\nGPS: ${gpsActive?"ACTIVE":"INACTIVE"}\nMicrophone: ${micActive?"ACTIVE":"INACTIVE"}\nBattery: ${battery===null?"N/A":battery+"%"}`}
-function startMonitoring(){monitoring=true;document.getElementById("currentThreat").innerHTML="<h3>MONITORING ACTIVE</h3><p>Sensor data is being observed locally for abnormal conditions.</p>";toast("Monitoring started.");diagnostics()}
-function stopMonitoring(){monitoring=false;toast("Monitoring stopped.")}
-function detectAuto(){
- if(!monitoring)return;
- const am=Math.hypot(lastMotion.x,lastMotion.y,lastMotion.z),gm=Math.hypot(lastGyro.alpha,lastGyro.beta,lastGyro.gamma);
- let score=0,reasons=[];
- if(am>25){score+=4;reasons.push("Very high acceleration/motion detected.")}
- else if(am>16){score+=2;reasons.push("Unusual acceleration detected.")}
- if(gm>250){score+=3;reasons.push("Very rapid rotational movement detected.")}
- else if(gm>120){score+=1;reasons.push("Elevated rotational movement detected.")}
- if(Math.abs(lastOri.beta)>70||Math.abs(lastOri.gamma)>70){score+=2;reasons.push("Phone orientation indicates a steep tilt.")}
- let cls=score>=6?"HIGH RISK / POSSIBLE EMERGENCY":score>=3?"WARNING / POSSIBLE THREAT":"LOW / NORMAL RISK";
- if(score>0 && Date.now()-lastAutoLog>5000){lastAutoLog=Date.now();saveThreat(cls,reasons.join(" "),score);lastThreat={classification:cls,score,explanation:reasons.join(" ")}}
- updateThreat(cls,score,reasons.join(" ")||"No significant abnormal sensor pattern detected.")
+
+function handleOrientation(e){
+
+ lastOri={
+  alpha:+(e.alpha||0),
+  beta:+(e.beta||0),
+  gamma:+(e.gamma||0)
+ };
+
+ document.getElementById("oriA").textContent=
+  lastOri.alpha.toFixed(2);
+
+ document.getElementById("oriB").textContent=
+  lastOri.beta.toFixed(2);
+
+ document.getElementById("oriG").textContent=
+  lastOri.gamma.toFixed(2);
+
+ orientationActive=true;
+
+ diagnostics()
 }
-function updateThreat(cls,score,explanation){const box=document.getElementById("currentThreat");box.className="result "+(score>=6?"danger-result":score>=3?"warning":"safe");box.innerHTML=`<h3>${cls}</h3><p><b>Risk Score:</b> ${score}</p><p>${explanation}</p>`}
+
+function diagnostics(){
+
+ document.getElementById("diagnostics").textContent=
+ `Motion: ${motionActive?"ACTIVE":"INACTIVE"}
+Gyroscope: ${gyroActive?"ACTIVE":"INACTIVE"}
+Orientation: ${orientationActive?"ACTIVE":"INACTIVE"}
+GPS: ${gpsActive?"ACTIVE":"INACTIVE"}
+Microphone: ${micActive?"ACTIVE":"INACTIVE"}
+Battery: ${battery===null?"N/A":battery+"%"}`
+}
+
+function startMonitoring(){
+
+ monitoring=true;
+
+ realTimeCooldownUntil=0;
+
+ if(cooldownTimer){
+  clearInterval(cooldownTimer);
+  cooldownTimer=null
+ }
+
+ document.getElementById("currentThreat").innerHTML=
+ `<h3>MONITORING ACTIVE</h3>
+ <p>Real-time sensor data is being observed locally for abnormal maritime movement and possible hazardous conditions.</p>`;
+
+ toast("Monitoring started.");
+ diagnostics()
+}
+
+function stopMonitoring(){
+
+ monitoring=false;
+
+ realTimeCooldownUntil=0;
+
+ if(cooldownTimer){
+  clearInterval(cooldownTimer);
+  cooldownTimer=null
+ }
+
+ toast("Monitoring stopped.")
+}
+
+/*
+ REAL-TIME THREAT DETECTION
+
+ Normal result:
+ - No cooldown.
+ - Another assessment can happen immediately.
+
+ Threat result:
+ - 30-second cooldown.
+ - Current threat result remains displayed.
+ - Countdown is displayed.
+*/
+function detectAuto(){
+
+ if(!monitoring)return;
+
+ const now=Date.now();
+
+ /* If a threat cooldown is active, do not reassess. */
+ if(now<realTimeCooldownUntil){
+  return
+ }
+
+ const am=Math.hypot(
+  lastMotion.x,
+  lastMotion.y,
+  lastMotion.z
+ );
+
+ const gm=Math.hypot(
+  lastGyro.alpha,
+  lastGyro.beta,
+  lastGyro.gamma
+ );
+
+ let score=0;
+ let reasons=[];
+
+ if(am>25){
+  score+=4;
+  reasons.push("Very high acceleration/motion detected.")
+ }
+ else if(am>16){
+  score+=2;
+  reasons.push("Unusual acceleration detected.")
+ }
+
+ if(gm>250){
+  score+=3;
+  reasons.push("Very rapid rotational movement detected.")
+ }
+ else if(gm>120){
+  score+=1;
+  reasons.push("Elevated rotational movement detected.")
+ }
+
+ if(
+  Math.abs(lastOri.beta)>70 ||
+  Math.abs(lastOri.gamma)>70
+ ){
+  score+=2;
+  reasons.push("Phone orientation indicates a steep tilt.")
+ }
+
+ const cls=
+  score>=6
+   ?"HIGH RISK / POSSIBLE EMERGENCY"
+   :score>=3
+   ?"WARNING / POSSIBLE THREAT"
+   :"LOW / NORMAL RISK";
+
+ const explanation=
+  reasons.join(" ") ||
+  "No significant abnormal sensor pattern detected.";
+
+ /*
+  NORMAL:
+  No cooldown is started.
+ */
+ if(score===0){
+
+  lastThreat={
+   classification:cls,
+   score,
+   explanation
+  };
+
+  updateThreat(
+   cls,
+   score,
+   explanation,
+   false
+  );
+
+  return
+ }
+
+ /*
+  THREAT:
+  Save the assessment and start 30-second cooldown.
+ */
+ if(Date.now()-lastAutoLog>5000){
+
+  lastAutoLog=Date.now();
+
+  saveThreat(
+   cls,
+   explanation,
+   score
+  );
+
+  lastThreat={
+   classification:cls,
+   score,
+   explanation
+  };
+
+  startThreatCooldown(
+   cls,
+   score,
+   explanation
+  )
+ }
+}
+
+/*
+ Start the 30-second cooldown only for detected threats.
+*/
+function startThreatCooldown(cls,score,explanation){
+
+ realTimeCooldownUntil=Date.now()+30000;
+
+ if(cooldownTimer){
+  clearInterval(cooldownTimer)
+ }
+
+ updateThreat(
+  cls,
+  score,
+  explanation,
+  true
+ );
+
+ cooldownTimer=setInterval(()=>{
+
+  const remaining=Math.max(
+   0,
+   realTimeCooldownUntil-Date.now()
+  );
+
+  if(remaining<=0){
+
+   clearInterval(cooldownTimer);
+   cooldownTimer=null;
+   realTimeCooldownUntil=0;
+
+   const box=document.getElementById("currentThreat");
+
+   box.className="result "+
+    (score>=6
+     ?"danger-result"
+     :"warning");
+
+   box.innerHTML=
+    `<h3>${cls}</h3>
+     <p><b>Risk Score:</b> ${score}</p>
+     <p>${explanation}</p>
+     <p class="status active">
+     ✓ Real-time assessment ready again.
+     </p>`;
+
+   return
+  }
+
+  updateThreat(
+   cls,
+   score,
+   explanation,
+   true
+  )
+
+ },1000)
+}
+
+function updateThreat(
+ cls,
+ score,
+ explanation,
+ cooldown=false
+){
+
+ const box=document.getElementById("currentThreat");
+
+ box.className=
+  "result "+
+  (
+   score>=6
+    ?"danger-result"
+    :score>=3
+    ?"warning"
+    :"safe"
+  );
+
+ let countdown="";
+
+ if(cooldown){
+
+  const remaining=Math.max(
+   0,
+   Math.ceil(
+    (realTimeCooldownUntil-Date.now())/1000
+   )
+  );
+
+  countdown=
+   `<p class="status warn">
+   ⏳ Next real-time assessment in ${remaining} seconds.
+   </p>`
+ }
+
+ box.innerHTML=
+  `<h3>${cls}</h3>
+   <p><b>Risk Score:</b> ${score}</p>
+   <p>${explanation}</p>
+   ${countdown}`
+}
+
 function manualClassify(){
- const vals=["wave","motion","gpsRisk","audio","engine","human"].map(id=>+document.getElementById(id).value),names=["Severe wave conditions","Unusual/extreme motion","GPS abnormality or unavailable","Unusual/distress audio","Mechanical/engine problem","Human observation of danger"];
- let score=0,reasons=[];vals.forEach((v,i)=>{if(v===1){score+=1;reasons.push(names[i]+" was reported.")}if(v===2){score+=2;reasons.push(names[i]+" was reported as severe/critical.")}});
- const cls=score>=7?"HIGH RISK / POSSIBLE EMERGENCY":score>=3?"WARNING / POSSIBLE THREAT":"LOW / NORMAL RISK";
- const exp=reasons.length?reasons.join(" ")+" Immediate caution is recommended and emergency procedures should be considered if danger is confirmed.":"The entered conditions do not currently indicate a significant threat. Continue monitoring and maintain awareness.";
- lastThreat={classification:cls,score,explanation:exp};updateThreat(cls,score,exp);document.getElementById("manualResult").innerHTML=`<div class="result ${score>=7?"danger-result":score>=3?"warning":"safe"}"><h3>${cls}</h3><p><b>Risk Score:</b> ${score}</p><p>${exp}</p></div>`;saveThreat(cls,exp,score);toast("Classification recorded.")}
-function saveThreat(classification,explanation,score){const row={id:Date.now(),timestamp:new Date().toISOString(),classification,explanation,riskScore:score,accelerometerX:lastMotion.x,accelerometerY:lastMotion.y,accelerometerZ:lastMotion.z,accelerationMagnitude:Math.hypot(lastMotion.x,lastMotion.y,lastMotion.z),gyroscopeAlpha:lastGyro.alpha,gyroscopeBeta:lastGyro.beta,gyroscopeGamma:lastGyro.gamma,orientationAlpha:lastOri.alpha,orientationBeta:lastOri.beta,orientationGamma:lastOri.gamma,latitude:gps.latitude,longitude:gps.longitude,speed:gps.speed,battery};history.unshift(row);history=history.slice(0,500);localStorage.setItem("fisherSafeHistory",JSON.stringify(history))}
-function displayHistory(){const c=document.getElementById("historyList");if(!history.length){c.innerHTML="<p>No threat records available.</p>";return}c.innerHTML=history.map(x=>`<div class="history-item"><b>${x.classification}</b><br><span class="small">${new Date(x.timestamp).toLocaleString()}</span><p>${x.explanation}</p><b>Risk:</b> ${x.riskScore}<br><b>GPS:</b> ${x.latitude==null?"Unavailable":x.latitude+", "+x.longitude}</div>`).join("")}
-function downloadFile(content,name,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500)}
-function csvExport(){if(!history.length){toast("No history to export.");return}const h=Object.keys(history[0]);const csv=[h.join(","),...history.map(r=>h.map(k=>`"${String(r[k]??"").replace(/"/g,'""')}"`).join(","))].join("\n");downloadFile(csv,"fisherSafe_threat_history.csv","text/csv")}
-function jsonExport(){if(!history.length){toast("No history to export.");return}downloadFile(JSON.stringify(history,null,2),"fisherSafe_threat_history.json","application/json")}
-function generateMessage(){const name=document.getElementById("fisherName").value||"Fisherman";const number=document.getElementById("emergencyNumber").value.trim();const loc=gps.latitude==null?"GPS Location: Unavailable":`GPS Location: ${gps.latitude.toFixed(6)}, ${gps.longitude.toFixed(6)}`;const msg=`EMERGENCY MARITIME DISTRESS ALERT - FISHERSAFE\n\nFisherman: ${name}\nThreat Status: ${lastThreat.classification}\nRisk Score: ${lastThreat.score}\n${loc}\nBattery: ${battery===null?"Unavailable":battery+"%"}\nTime: ${new Date().toLocaleString()}\n\n${lastThreat.explanation}\n\nPlease provide immediate assistance if possible.`;document.getElementById("emergencyMessage").value=msg;document.getElementById("smsStatus").innerHTML=`<p class="small">Message prepared for ${number||"the emergency contact"}.</p>`}
-function sendSMS(){let n=document.getElementById("emergencyNumber").value.trim();if(!n){toast("Enter an emergency number first.");return}if(!document.getElementById("emergencyMessage").value)generateMessage();const m=document.getElementById("emergencyMessage").value;window.location.href="sms:"+encodeURIComponent(n)+"?body="+encodeURIComponent(m);document.getElementById("smsStatus").innerHTML="<p class='small'>The phone messaging application should open. Review the message and press Send.</p>"}
-async function copyMsg(){if(!document.getElementById("emergencyMessage").value)generateMessage();try{await navigator.clipboard.writeText(document.getElementById("emergencyMessage").value);toast("Message copied.")}catch(e){toast("Copy unavailable.")}}
-async function shareMsg(){if(!document.getElementById("emergencyMessage").value)generateMessage();if(navigator.share)try{await navigator.share({title:"FisherSafe Emergency Alert",text:document.getElementById("emergencyMessage").value})}catch(e){}else toast("Sharing unavailable. Use Copy.")}
-document.getElementById("permissionsBtn").onclick=permissions;document.getElementById("startBtn").onclick=startMonitoring;document.getElementById("stopBtn").onclick=stopMonitoring;document.getElementById("classifyBtn").onclick=manualClassify;document.getElementById("csvBtn").onclick=csvExport;document.getElementById("jsonBtn").onclick=jsonExport;document.getElementById("generateBtn").onclick=generateMessage;document.getElementById("smsBtn").onclick=sendSMS;document.getElementById("copyBtn").onclick=copyMsg;document.getElementById("shareBtn").onclick=shareMsg;document.getElementById("clearBtn").onclick=()=>{if(confirm("Delete all threat history?")){history=[];localStorage.removeItem("fisherSafeHistory");displayHistory()}};batteryInit();diagnostics();
+
+ const vals=[
+  "wave",
+  "motion",
+  "gpsRisk",
+  "audio",
+  "engine",
+  "human"
+ ].map(id=>+document.getElementById(id).value);
+
+ const names=[
+  "Severe wave conditions",
+  "Unusual/extreme motion",
+  "GPS abnormality or unavailable",
+  "Unusual/distress audio",
+  "Mechanical/engine problem",
+  "Human observation of danger"
+ ];
+
+ let score=0;
+ let reasons=[];
+
+ vals.forEach((v,i)=>{
+
+  if(v===1){
+   score+=1;
+   reasons.push(names[i]+" was reported.")
+  }
+
+  if(v===2){
+   score+=2;
+   reasons.push(
+    names[i]+" was reported as severe/critical."
+   )
+  }
+ });
+
+ const cls=
+  score>=7
+   ?"HIGH RISK / POSSIBLE EMERGENCY"
+   :score>=3
+   ?"WARNING / POSSIBLE THREAT"
+   :"LOW / NORMAL RISK";
+
+ const exp=
+  reasons.length
+   ?reasons.join(" ")+" Immediate caution is recommended and emergency procedures should be considered if danger is confirmed."
+   :"The entered conditions do not currently indicate a significant threat. Continue monitoring and maintain awareness.";
+
+ lastThreat={
+  classification:cls,
+  score,
+  explanation:exp
+ };
+
+ updateThreat(
+  cls,
+  score,
+  exp,
+  false
+ );
+
+ document.getElementById("manualResult").innerHTML=
+ `<div class="result ${
+  score>=7
+   ?"danger-result"
+   :score>=3
+   ?"warning"
+   :"safe"
+ }">
+ <h3>${cls}</h3>
+ <p><b>Risk Score:</b> ${score}</p>
+ <p>${exp}</p>
+ </div>`;
+
+ saveThreat(
+  cls,
+  exp,
+  score
+ );
+
+ toast("ML threat classification recorded.")
+}
+
+function saveThreat(
+ classification,
+ explanation,
+ score
+){
+
+ const row={
+  id:Date.now(),
+  timestamp:new Date().toISOString(),
+  classification,
+  explanation,
+  riskScore:score,
+
+  accelerometerX:lastMotion.x,
+  accelerometerY:lastMotion.y,
+  accelerometerZ:lastMotion.z,
+
+  accelerationMagnitude:
+   Math.hypot(
+    lastMotion.x,
+    lastMotion.y,
+    lastMotion.z
+   ),
+
+  gyroscopeAlpha:lastGyro.alpha,
+  gyroscopeBeta:lastGyro.beta,
+  gyroscopeGamma:lastGyro.gamma,
+
+  orientationAlpha:lastOri.alpha,
+  orientationBeta:lastOri.beta,
+  orientationGamma:lastOri.gamma,
+
+  latitude:gps.latitude,
+  longitude:gps.longitude,
+  speed:gps.speed,
+  battery
+ };
+
+ history.unshift(row);
+
+ history=history.slice(0,500);
+
+ localStorage.setItem(
+  "fisherSafeHistory",
+  JSON.stringify(history)
+}
+
+function displayHistory(){
+
+ const c=document.getElementById("historyList");
+
+ if(!history.length){
+  c.innerHTML="<p>No threat records available.</p>";
+  return
+ }
+
+ c.innerHTML=history.map(x=>
+  `<div class="history-item">
+  <b>${x.classification}</b><br>
+  <span class="small">
+  ${new Date(x.timestamp).toLocaleString()}
+  </span>
+  <p>${x.explanation}</p>
+  <b>Risk:</b> ${x.riskScore}<br>
+  <b>GPS:</b> ${
+   x.latitude==null
+    ?"Unavailable"
+    :x.latitude+", "+x.longitude
+  }
+  </div>`
+ ).join("")
+}
+
+function downloadFile(
+ content,
+ name,
+ type
+){
+
+ const blob=new Blob(
+  [content],
+  {type}
+ );
+
+ const url=URL.createObjectURL(blob);
+
+ const a=document.createElement("a");
+
+ a.href=url;
+ a.download=name;
+
+ document.body.appendChild(a);
+
+ a.click();
+
+ a.remove();
+
+ setTimeout(
+  ()=>URL.revokeObjectURL(url),
+  500
+ )
+}
+
+function csvExport(){
+
+ if(!history.length){
+  toast("No history to export.");
+  return
+ }
+
+ const h=Object.keys(history[0]);
+
+ const csv=[
+  h.join(","),
+  ...history.map(r=>
+   h.map(k=>
+    `"${String(r[k]??"").replace(/"/g,'""')}"`
+   ).join(",")
+  )
+ ].join("\n");
+
+ downloadFile(
+  csv,
+  "fisherSafe_threat_history.csv",
+  "text/csv"
+ )
+}
+
+function jsonExport(){
+
+ if(!history.length){
+  toast("No history to export.");
+  return
+ }
+
+ downloadFile(
+  JSON.stringify(history,null,2),
+  "fisherSafe_threat_history.json",
+  "application/json"
+ )
+}
+
+function generateMessage(){
+
+ const name=
+  document.getElementById("fisherName").value ||
+  "Fisherman";
+
+ const number=
+  document.getElementById("emergencyNumber")
+  .value.trim();
+
+ const loc=
+  gps.latitude==null
+   ?"GPS Location: Unavailable"
+   :`GPS Location: ${gps.latitude.toFixed(6)}, ${gps.longitude.toFixed(6)}`;
+
+ const msg=
+ `EMERGENCY MARITIME DISTRESS ALERT - FISHERSAFE
+
+Fisherman: ${name}
+Threat Status: ${lastThreat.classification}
+Risk Score: ${lastThreat.score}
+${loc}
+Battery: ${battery===null?"Unavailable":battery+"%"}
+Time: ${new Date().toLocaleString()}
+
+${lastThreat.explanation}
+
+Please provide immediate assistance if possible.`;
+
+ document.getElementById("emergencyMessage").value=msg;
+
+ document.getElementById("smsStatus").innerHTML=
+ `<p class="small">
+ Message prepared for ${
+  number||"the emergency contact"
+ }.
+ </p>`
+}
+
+function sendSMS(){
+
+ let n=
+  document.getElementById("emergencyNumber")
+  .value.trim();
+
+ if(!n){
+  toast("Enter an emergency number first.");
+  return
+ }
+
+ if(
+  !document.getElementById("emergencyMessage")
+  .value
+ ){
+  generateMessage()
+ }
+
+ const m=
+  document.getElementById("emergencyMessage")
+  .value;
+
+ window.location.href=
+  "sms:"+encodeURIComponent(n)+
+  "?body="+encodeURIComponent(m);
+
+ document.getElementById("smsStatus").innerHTML=
+ `<p class='small'>
+ The phone messaging application should open.
+ Review the message and press Send.
+ </p>`
+}
+
+async function copyMsg(){
+
+ if(
+  !document.getElementById("emergencyMessage")
+  .value
+ ){
+  generateMessage()
+ }
+
+ try{
+
+  await navigator.clipboard.writeText(
+   document.getElementById("emergencyMessage").value
+  );
+
+  toast("Message copied.")
+
+ }catch(e){
+
+  toast("Copy unavailable.")
+ }
+}
+
+async function shareMsg(){
+
+ if(
+  !document.getElementById("emergencyMessage")
+  .value
+ ){
+  generateMessage()
+ }
+
+ if(navigator.share){
+
+  try{
+
+   await navigator.share({
+    title:"FisherSafe Emergency Alert",
+    text:document.getElementById("emergencyMessage").value
+   })
+
+  }catch(e){}
+
+ }else{
+
+  toast("Sharing unavailable. Use Copy.")
+ }
+}
+
+document.getElementById("permissionsBtn").onclick=permissions;
+document.getElementById("startBtn").onclick=startMonitoring;
+document.getElementById("stopBtn").onclick=stopMonitoring;
+document.getElementById("classifyBtn").onclick=manualClassify;
+document.getElementById("csvBtn").onclick=csvExport;
+document.getElementById("jsonBtn").onclick=jsonExport;
+document.getElementById("generateBtn").onclick=generateMessage;
+document.getElementById("smsBtn").onclick=sendSMS;
+document.getElementById("copyBtn").onclick=copyMsg;
+document.getElementById("shareBtn").onclick=shareMsg;
+
+document.getElementById("clearBtn").onclick=()=>{
+ if(confirm("Delete all threat history?")){
+  history=[];
+  localStorage.removeItem("fisherSafeHistory");
+  displayHistory()
+ }
+};
+
+batteryInit();
+diagnostics();
 </script>
-</body></html>
+
+</body>
+</html>
