@@ -6,1060 +6,2464 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#063970">
 <title>FisherSafe</title>
+
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#eef4f8;color:#16202a}
-header{background:linear-gradient(135deg,#063970,#0b6e99);color:#fff;padding:18px 16px;position:sticky;top:0;z-index:10}
-header h1{margin:0;font-size:24px}header p{margin:5px 0 0;font-size:12px}
-nav{display:flex;overflow-x:auto;gap:7px;padding:9px;background:#fff;position:sticky;top:78px;z-index:9;box-shadow:0 2px 8px #0001}
-nav button{border:0;padding:10px 12px;border-radius:9px;background:#dceaf2;color:#063970;font-weight:bold;white-space:nowrap}
-nav button.active{background:#063970;color:#fff}
-main{max-width:900px;margin:auto;padding:12px}.page{display:none}.page.active{display:block}
-.card{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 3px 12px #0000000d}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px}
-.sensor{border:1px solid #dce4e9;border-radius:11px;padding:12px;background:#fafcfd}
-.sensor h3{font-size:14px;margin:0 0 8px;color:#063970}.value{font-size:20px;font-weight:bold;word-break:break-word}
-.status{font-size:11px;font-weight:bold;margin-top:5px}.active{color:#16833b}.inactive{color:#c0392b}.warn{color:#c27b00}
-button.action{width:100%;padding:13px;border:0;border-radius:10px;background:#0b6e99;color:#fff;font-weight:bold;margin:5px 0;cursor:pointer}
-button.danger{background:#c0392b}.success{background:#16833b!important}.secondary{background:#566573!important}
-input,select,textarea{width:100%;padding:11px;margin:6px 0 12px;border:1px solid #ccd6dd;border-radius:8px;font-size:15px}
-.result{padding:14px;border-radius:11px;margin-top:12px}.safe{background:#e8f7ee;border:2px solid #27ae60}.warning{background:#fff7df;border:2px solid #f39c12}.danger-result{background:#fdeaea;border:2px solid #e74c3c}
-.history-item{border-left:5px solid #063970;background:#f8fafc;padding:12px;margin:8px 0;border-radius:8px}
-.small{font-size:12px;color:#667}.mono{font-family:monospace;white-space:pre-wrap;background:#f5f7f9;padding:12px;border-radius:9px}
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#17202a;color:#fff;padding:11px 16px;border-radius:9px;display:none;z-index:50}
+*{box-sizing:border-box}
+
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#eef4f8;
+color:#16202a
+}
+
+header{
+background:linear-gradient(135deg,#063970,#0b6e99);
+color:#fff;
+padding:18px 16px;
+position:sticky;
+top:0;
+z-index:20
+}
+
+header h1{
+margin:0;
+font-size:24px
+}
+
+header p{
+margin:5px 0 0;
+font-size:12px
+}
+
+nav{
+display:flex;
+overflow-x:auto;
+gap:7px;
+padding:9px;
+background:#fff;
+position:sticky;
+top:78px;
+z-index:19;
+box-shadow:0 2px 8px #0001
+}
+
+nav button{
+border:0;
+padding:10px 12px;
+border-radius:9px;
+background:#dceaf2;
+color:#063970;
+font-weight:bold;
+white-space:nowrap;
+cursor:pointer
+}
+
+nav button.active{
+background:#063970;
+color:#fff
+}
+
+main{
+max-width:900px;
+margin:auto;
+padding:12px
+}
+
+.page{
+display:none
+}
+
+.page.active{
+display:block
+}
+
+.card{
+background:#fff;
+border-radius:14px;
+padding:16px;
+margin-bottom:14px;
+box-shadow:0 3px 12px #0000000d
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(145px,1fr));
+gap:10px
+}
+
+.sensor{
+border:1px solid #dce4e9;
+border-radius:11px;
+padding:12px;
+background:#fafcfd
+}
+
+.sensor h3{
+font-size:14px;
+margin:0 0 8px;
+color:#063970
+}
+
+.value{
+font-size:20px;
+font-weight:bold;
+word-break:break-word
+}
+
+.status{
+font-size:11px;
+font-weight:bold;
+margin-top:5px
+}
+
+.active{
+color:#16833b
+}
+
+.inactive{
+color:#c0392b
+}
+
+.warn{
+color:#c27b00
+}
+
+button.action{
+width:100%;
+padding:13px;
+border:0;
+border-radius:10px;
+background:#0b6e99;
+color:#fff;
+font-weight:bold;
+margin:5px 0;
+cursor:pointer
+}
+
+button.danger{
+background:#c0392b
+}
+
+.success{
+background:#16833b!important
+}
+
+.secondary{
+background:#566573!important
+}
+
+input,select,textarea{
+width:100%;
+padding:11px;
+margin:6px 0 12px;
+border:1px solid #ccd6dd;
+border-radius:8px;
+font-size:15px
+}
+
+.result{
+padding:14px;
+border-radius:11px;
+margin-top:12px
+}
+
+.safe{
+background:#e8f7ee;
+border:2px solid #27ae60
+}
+
+.warning{
+background:#fff7df;
+border:2px solid #f39c12
+}
+
+.danger-result{
+background:#fdeaea;
+border:2px solid #e74c3c
+}
+
+.history-item{
+border-left:5px solid #063970;
+background:#f8fafc;
+padding:12px;
+margin:8px 0;
+border-radius:8px
+}
+
+.small{
+font-size:12px;
+color:#667
+}
+
+.mono{
+font-family:monospace;
+white-space:pre-wrap;
+background:#f5f7f9;
+padding:12px;
+border-radius:9px
+}
+
+.cooldown{
+background:#fff3cd;
+border:2px solid #f39c12;
+color:#7a5200;
+padding:14px;
+border-radius:11px;
+margin-top:12px;
+font-weight:bold
+}
+
+#toast{
+position:fixed;
+bottom:20px;
+left:50%;
+transform:translateX(-50%);
+background:#17202a;
+color:#fff;
+padding:11px 16px;
+border-radius:9px;
+display:none;
+z-index:50;
+max-width:90%;
+text-align:center
+}
+
+.hidden{
+display:none!important
+}
 </style>
+
 </head>
+
 <body>
-<header><h1>⚓ FisherSafe</h1><p>Offline Maritime Threat Detection & Emergency Alert System</p></header>
-<nav id="nav"></nav>
+
+<header>
+<h1>⚓ FisherSafe</h1>
+<p>Offline Maritime Threat Detection & Emergency Alert System</p>
+</header>
+
+<!-- STATIC NAVIGATION -->
+
+<nav id="nav">
+
+<button id="n-dashboard" class="active" onclick="showPage('dashboard')">
+Dashboard
+</button>
+
+<button id="n-sensors" onclick="showPage('sensors')">
+Live Sensors
+</button>
+
+<button id="n-classification" onclick="showPage('classification')">
+ML Threat Classification
+</button>
+
+<button id="n-emergency" onclick="showPage('emergency')">
+Emergency Alert
+</button>
+
+<button id="n-history" onclick="showPage('history')">
+Threat History
+</button>
+
+<button id="n-about" onclick="showPage('about')">
+About
+</button>
+
+</nav>
+
 <main>
 
+<!-- ========================================================= -->
+
+<!-- DASHBOARD -->
+
+<!-- ========================================================= -->
+
 <section id="dashboard" class="page active">
-<div class="card"><h2>🛡️ Maritime Safety Monitor</h2>
-<p>FisherSafe monitors smartphone sensors and available location information to identify possible hazardous conditions. Core monitoring and history storage work locally on the device.</p>
+
+<div class="card">
+
+<h2>🛡️ Maritime Safety Monitor</h2>
+
+<p>
+FisherSafe monitors smartphone sensors and available location information
+to identify possible hazardous conditions. Core monitoring and history
+storage work locally on the device.
+</p>
+
 <div class="grid">
-<div class="sensor"><h3>Motion</h3><div id="motionStatus" class="value">INACTIVE</div><div id="motionText" class="status inactive">Waiting</div></div>
-<div class="sensor"><h3>GPS</h3><div id="gpsStatus" class="value">INACTIVE</div><div id="gpsText" class="status inactive">Waiting</div></div>
-<div class="sensor"><h3>Microphone</h3><div id="micStatus" class="value">INACTIVE</div><div id="micText" class="status inactive">Not requested</div></div>
-<div class="sensor"><h3>Battery</h3><div id="batteryStatus" class="value">N/A</div><div id="batteryText" class="status warn">Checking</div></div>
-</div>
-<button class="action success" id="permissionsBtn">🔐 Enable Device Permissions</button>
-<button class="action" id="startBtn">▶ Start Monitoring</button>
-<button class="action danger" id="stopBtn">■ Stop Monitoring</button>
+
+<div class="sensor">
+<h3>Motion</h3>
+<div id="motionStatus" class="value">INACTIVE</div>
+<div id="motionText" class="status inactive">Waiting</div>
 </div>
 
-<div class="card"><h2>🚨 Real-Time Threat Report</h2>
+<div class="sensor">
+<h3>GPS</h3>
+<div id="gpsStatus" class="value">INACTIVE</div>
+<div id="gpsText" class="status inactive">Waiting</div>
+</div>
+
+<div class="sensor">
+<h3>Microphone</h3>
+<div id="micStatus" class="value">INACTIVE</div>
+<div id="micText" class="status inactive">Not requested</div>
+</div>
+
+<div class="sensor">
+<h3>Battery</h3>
+<div id="batteryStatus" class="value">N/A</div>
+<div id="batteryText" class="status warn">Checking</div>
+</div>
+
+</div>
+
+<button class="action success" id="permissionsBtn">
+🔐 Enable Device Permissions
+</button>
+
+<button class="action" id="startBtn">
+▶ Start Monitoring
+</button>
+
+<button class="action danger" id="stopBtn">
+■ Stop Monitoring
+</button>
+
+</div>
+
+<div class="card">
+
+<h2>🚨 Real Time Threat Report</h2>
+
 <div id="currentThreat" class="result safe">
+
 <h3>SYSTEM READY</h3>
-<p>Enable permissions and start monitoring.</p>
-</div>
+
+<p>
+Enable permissions and start monitoring.
+</p>
+
 </div>
 
-<div class="card"><h2>📖 How the System Works</h2>
-<p><b>Accelerometer:</b> measures movement and vibration. <b>Gyroscope:</b> measures rotational movement. <b>Orientation:</b> estimates device position. <b>GPS:</b> provides location and speed where available. <b>Microphone:</b> requests audio access for future acoustic-event detection. <b>Battery:</b> indicates remaining power.</p>
-<p>The current prototype uses explainable rule-based detection so it can operate offline. The architecture can later accept a trained on-device ML model.</p></div>
+<div id="cooldownBox" class="cooldown hidden">
+⏳ Real-time threat assessment temporarily paused.
+<br>
+Next assessment in <span id="cooldownTimer">30</span> seconds.
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>📖 How the System Works</h2>
+
+<p>
+<b>Accelerometer:</b> measures movement and vibration.
+<b>Gyroscope:</b> measures rotational movement.
+<b>Orientation:</b> estimates device position.
+<b>GPS:</b> provides location and speed where available.
+<b>Microphone:</b> requests audio access for future acoustic-event detection.
+<b>Battery:</b> indicates remaining power.
+</p>
+
+<p>
+The real-time monitoring component observes motion-related sensor patterns
+to identify possible abnormal boat movement. The ML Threat Classification
+module provides threat classification from entered observations.
+</p>
+
+</div>
+
 </section>
+
+<!-- ========================================================= -->
+
+<!-- LIVE SENSORS -->
+
+<!-- ========================================================= -->
 
 <section id="sensors" class="page">
-<div class="card"><h2>📡 Live Sensor Monitoring</h2><p>Move and rotate the phone after pressing Start Monitoring. Values are read from device/browser sensor APIs where supported.</p>
+
+<div class="card">
+
+<h2>📡 Live Sensor Monitoring</h2>
+
+<p>
+Move and rotate the phone after pressing Start Monitoring.
+Values are read from device/browser sensor APIs where supported.
+</p>
+
 <div class="grid">
-<div class="sensor"><h3>Accelerometer X</h3><div id="accX" class="value">0.00</div><div id="accXS" class="status inactive">INACTIVE</div></div>
-<div class="sensor"><h3>Accelerometer Y</h3><div id="accY" class="value">0.00</div><div id="accYS" class="status inactive">INACTIVE</div></div>
-<div class="sensor"><h3>Accelerometer Z</h3><div id="accZ" class="value">0.00</div><div id="accZS" class="status inactive">INACTIVE</div></div>
-<div class="sensor"><h3>Acceleration Magnitude</h3><div id="accMag" class="value">0.00</div></div>
-<div class="sensor"><h3>Gyroscope α</h3><div id="gyroA" class="value">0.00</div><div id="gyroAS" class="status inactive">INACTIVE</div></div>
-<div class="sensor"><h3>Gyroscope β</h3><div id="gyroB" class="value">0.00</div><div id="gyroBS" class="status inactive">INACTIVE</div></div>
-<div class="sensor"><h3>Gyroscope γ</h3><div id="gyroG" class="value">0.00</div><div id="gyroGS" class="status inactive">INACTIVE</div></div>
-<div class="sensor"><h3>Gyroscope Magnitude</h3><div id="gyroMag" class="value">0.00</div></div>
-<div class="sensor"><h3>Orientation α</h3><div id="oriA" class="value">0.00</div></div>
-<div class="sensor"><h3>Orientation β</h3><div id="oriB" class="value">0.00</div></div>
-<div class="sensor"><h3>Orientation γ</h3><div id="oriG" class="value">0.00</div></div>
-<div class="sensor"><h3>GPS Latitude</h3><div id="lat" class="value">Unavailable</div></div>
-<div class="sensor"><h3>GPS Longitude</h3><div id="lon" class="value">Unavailable</div></div>
-<div class="sensor"><h3>GPS Speed</h3><div id="speed" class="value">0.00 km/h</div></div>
+
+<div class="sensor">
+<h3>Accelerometer X</h3>
+<div id="accX" class="value">0.00</div>
+<div id="accXS" class="status inactive">INACTIVE</div>
 </div>
-<div class="card"><h3>🔬 Sensor Diagnostics</h3><div id="diagnostics" class="mono">Waiting for sensor activity.</div></div>
+
+<div class="sensor">
+<h3>Accelerometer Y</h3>
+<div id="accY" class="value">0.00</div>
+<div id="accYS" class="status inactive">INACTIVE</div>
 </div>
+
+<div class="sensor">
+<h3>Accelerometer Z</h3>
+<div id="accZ" class="value">0.00</div>
+<div id="accZS" class="status inactive">INACTIVE</div>
+</div>
+
+<div class="sensor">
+<h3>Acceleration Magnitude</h3>
+<div id="accMag" class="value">0.00</div>
+</div>
+
+<div class="sensor">
+<h3>Gyroscope α</h3>
+<div id="gyroA" class="value">0.00</div>
+<div id="gyroAS" class="status inactive">INACTIVE</div>
+</div>
+
+<div class="sensor">
+<h3>Gyroscope β</h3>
+<div id="gyroB" class="value">0.00</div>
+<div id="gyroBS" class="status inactive">INACTIVE</div>
+</div>
+
+<div class="sensor">
+<h3>Gyroscope γ</h3>
+<div id="gyroG" class="value">0.00</div>
+<div id="gyroGS" class="status inactive">INACTIVE</div>
+</div>
+
+<div class="sensor">
+<h3>Gyroscope Magnitude</h3>
+<div id="gyroMag" class="value">0.00</div>
+</div>
+
+<div class="sensor">
+<h3>Orientation α</h3>
+<div id="oriA" class="value">0.00</div>
+</div>
+
+<div class="sensor">
+<h3>Orientation β</h3>
+<div id="oriB" class="value">0.00</div>
+</div>
+
+<div class="sensor">
+<h3>Orientation γ</h3>
+<div id="oriG" class="value">0.00</div>
+</div>
+
+<div class="sensor">
+<h3>GPS Latitude</h3>
+<div id="lat" class="value">Unavailable</div>
+</div>
+
+<div class="sensor">
+<h3>GPS Longitude</h3>
+<div id="lon" class="value">Unavailable</div>
+</div>
+
+<div class="sensor">
+<h3>GPS Speed</h3>
+<div id="speed" class="value">0.00 km/h</div>
+</div>
+
+</div>
+
+<div class="card">
+
+<h3>🔬 Sensor Diagnostics</h3>
+
+<div id="diagnostics" class="mono">
+Waiting for sensor activity.
+</div>
+
+</div>
+
+</div>
+
 </section>
+
+<!-- ========================================================= -->
+
+<!-- ML THREAT CLASSIFICATION -->
+
+<!-- ========================================================= -->
 
 <section id="classification" class="page">
-<div class="card"><h2>🧠 ML Threat Classification</h2>
-<p>Enter observed conditions. The system assigns a risk score and explains why the condition was classified as normal, warning, or emergency.</p>
-<label>Wave Intensity</label><select id="wave"><option value="0">Calm</option><option value="1">Moderate</option><option value="2">Severe</option></select>
-<label>Motion Intensity</label><select id="motion"><option value="0">Normal</option><option value="1">Unusual</option><option value="2">Extreme</option></select>
-<label>GPS Status</label><select id="gpsRisk"><option value="0">Normal Location</option><option value="1">Unexpected Location</option><option value="2">Location Unavailable</option></select>
-<label>Audio Condition</label><select id="audio"><option value="0">Normal</option><option value="1">Loud / Unusual Sound</option><option value="2">Possible Distress Sound</option></select>
-<label>Engine / Operational Condition</label><select id="engine"><option value="0">Normal</option><option value="1">Mechanical Problem</option><option value="2">Engine Failure</option></select>
-<label>Human Observation</label><select id="human"><option value="0">No Immediate Danger</option><option value="1">Possible Danger</option><option value="2">Confirmed Emergency</option></select>
-<button class="action" id="classifyBtn">🔍 Classify Threat</button>
+
+<div class="card">
+
+<h2>🧠 ML Threat Classification</h2>
+
+<p>
+Enter observed conditions. The system calculates a risk score and
+classifies the reported condition as normal, warning, or possible emergency.
+</p>
+
+<label>Wave Intensity</label>
+
+<select id="wave">
+<option value="0">Calm</option>
+<option value="1">Moderate</option>
+<option value="2">Severe</option>
+</select>
+
+<label>Motion Intensity</label>
+
+<select id="motion">
+<option value="0">Normal</option>
+<option value="1">Unusual</option>
+<option value="2">Extreme</option>
+</select>
+
+<label>GPS Status</label>
+
+<select id="gpsRisk">
+<option value="0">Normal Location</option>
+<option value="1">Unexpected Location</option>
+<option value="2">Location Unavailable</option>
+</select>
+
+<label>Audio Condition</label>
+
+<select id="audio">
+<option value="0">Normal</option>
+<option value="1">Loud / Unusual Sound</option>
+<option value="2">Possible Distress Sound</option>
+</select>
+
+<label>Engine / Operational Condition</label>
+
+<select id="engine">
+<option value="0">Normal</option>
+<option value="1">Mechanical Problem</option>
+<option value="2">Engine Failure</option>
+</select>
+
+<label>Human Observation</label>
+
+<select id="human">
+<option value="0">No Immediate Danger</option>
+<option value="1">Possible Danger</option>
+<option value="2">Confirmed Emergency</option>
+</select>
+
+<button class="action" id="classifyBtn">
+🔍 Classify Threat
+</button>
+
 <div id="manualResult"></div>
+
 </div>
+
 </section>
+
+<!-- ========================================================= -->
+
+<!-- EMERGENCY -->
+
+<!-- ========================================================= -->
 
 <section id="emergency" class="page">
-<div class="card"><h2>🚨 Emergency Alert System</h2><p>Generate a distress message containing the current risk, time, battery and latest GPS information. On Android, the SMS button opens the phone messaging application with the recipient and message prefilled for review and sending.</p>
-<label>Fisherman Name</label><input id="fisherName" placeholder="Enter fisherman name">
-<label>Emergency Contact Number</label><input id="emergencyNumber" type="tel" placeholder="+234XXXXXXXXXX">
-<label>Emergency Message</label><textarea id="emergencyMessage" rows="8"></textarea>
-<button class="action" id="generateBtn">Generate Emergency Message</button>
-<button class="action danger" id="smsBtn">📱 Send via Phone SMS</button>
-<button class="action secondary" id="copyBtn">📋 Copy Message</button>
-<button class="action success" id="shareBtn">📤 Share Message</button>
+
+<div class="card">
+
+<h2>🚨 Emergency Alert System</h2>
+
+<p>
+Generate a distress message containing the current risk, time, battery
+and latest GPS information.
+</p>
+
+<label>Fisherman Name</label>
+
+<input id="fisherName" placeholder="Enter fisherman name">
+
+<label>Emergency Contact Number</label>
+
+<input id="emergencyNumber"
+type="tel"
+placeholder="+234XXXXXXXXXX">
+
+<label>Emergency Message</label>
+
+<textarea id="emergencyMessage" rows="8"></textarea>
+
+<button class="action" id="generateBtn">
+Generate Emergency Message
+</button>
+
+<button class="action danger" id="smsBtn">
+📱 Send via Phone SMS
+</button>
+
+<button class="action success" id="whatsappBtn">
+💬 Send via WhatsApp
+</button>
+
+<button class="action secondary" id="copyBtn">
+📋 Copy Message
+</button>
+
+<button class="action" id="shareBtn">
+📤 Share Message
+</button>
+
 <div id="smsStatus"></div>
+
 </div>
+
 </section>
+
+<!-- ========================================================= -->
+
+<!-- HISTORY -->
+
+<!-- ========================================================= -->
 
 <section id="history" class="page">
-<div class="card"><h2>📊 Threat Detection History</h2><p>Records are stored locally on the device. No internet connection is required to retain history.</p>
-<button class="action" id="csvBtn">⬇ Download CSV</button>
-<button class="action" id="jsonBtn">⬇ Download JSON</button>
-<button class="action danger" id="clearBtn">Clear History</button>
+
+<div class="card">
+
+<h2>📊 Threat Detection History</h2>
+
+<p>
+Records are stored locally on the device. No internet connection is
+required to retain history.
+</p>
+
+<button class="action" id="csvBtn">
+⬇ Download CSV
+</button>
+
+<button class="action" id="jsonBtn">
+⬇ Download JSON
+</button>
+
+<button class="action danger" id="clearBtn">
+Clear History
+</button>
+
 <div id="historyList"></div>
+
 </div>
+
 </section>
 
+<!-- ========================================================= -->
+
+<!-- ABOUT -->
+
+<!-- ========================================================= -->
+
 <section id="about" class="page">
-<div class="card"><h2>⚓ About FisherSafe</h2>
-<p>FisherSafe is a student research prototype for offline maritime threat detection and emergency alerting for small-scale fishermen in remote, low-connectivity environments.</p>
+
+<div class="card">
+
+<h2>⚓ About FisherSafe</h2>
+
+<p>
+FisherSafe is a student research prototype for offline maritime threat
+detection and emergency alerting for small-scale fishermen in remote,
+low-connectivity environments.
+</p>
+
 <h3>Research Features</h3>
+
 <ul>
+
 <li>Multi-sensor monitoring</li>
-<li>Explainable local threat classification</li>
+
+<li>Real-time threat reporting</li>
+
+<li>ML threat classification</li>
+
 <li>Offline local storage</li>
+
 <li>Emergency alert preparation</li>
+
+<li>SMS and WhatsApp emergency communication</li>
+
 <li>Research data export</li>
-<li>Future on-device ML integration</li>
+
 </ul>
-<p><b>Important:</b> This prototype is a research aid and should not be treated as a replacement for established maritime emergency services.</p>
+
+<p>
+<b>Important:</b> This prototype is a research aid and should not be
+treated as a replacement for established maritime emergency services.
+</p>
+
 </div>
+
 </section>
 
 </main>
+
 <div id="toast"></div>
 
 <script>
-const pages=["dashboard","sensors","classification","emergency","history","about"];
-const navLabels=["Dashboard","Live Sensors","ML Threat Classification","Emergency Alert","Threat History","About"];
-const nav=document.getElementById("nav");
 
-pages.forEach((p,i)=>{
- const b=document.createElement("button");
- b.textContent=navLabels[i];
- b.onclick=()=>showPage(p);
- b.id="n-"+p;
- nav.appendChild(b)
+/* =========================================================
+   PAGE NAVIGATION
+========================================================= */
+
+function showPage(page){
+
+document.querySelectorAll(".page").forEach(function(section){
+
+section.classList.remove("active");
+
 });
 
-function showPage(p){
- document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
- document.getElementById(p).classList.add("active");
- document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));
- document.getElementById("n-"+p).classList.add("active");
- if(p==="history")displayHistory()
+document.querySelectorAll("nav button").forEach(function(button){
+
+button.classList.remove("active");
+
+});
+
+const selectedPage=document.getElementById(page);
+
+const selectedButton=document.getElementById("n-"+page);
+
+if(selectedPage){
+
+selectedPage.classList.add("active");
+
 }
 
-showPage("dashboard");
+if(selectedButton){
+
+selectedButton.classList.add("active");
+
+}
+
+if(page==="history"){
+
+displayHistory();
+
+}
+
+window.scrollTo(0,0);
+
+}
+
+
+/* =========================================================
+   VARIABLES
+========================================================= */
 
 let monitoring=false;
+
 let motionActive=false;
 let gyroActive=false;
 let orientationActive=false;
 let gpsActive=false;
 let micActive=false;
 
-let lastMotion={x:0,y:0,z:0};
-let lastGyro={alpha:0,beta:0,gamma:0};
-let lastOri={alpha:0,beta:0,gamma:0};
+let lastMotion={
+x:0,
+y:0,
+z:0
+};
+
+let lastGyro={
+alpha:0,
+beta:0,
+gamma:0
+};
+
+let lastOri={
+alpha:0,
+beta:0,
+gamma:0
+};
 
 let gps={
- latitude:null,
- longitude:null,
- accuracy:null,
- speed:null
+latitude:null,
+longitude:null,
+accuracy:null,
+speed:null
 };
 
 let battery=null;
 
 let lastThreat={
- classification:"LOW / NORMAL RISK",
- score:0,
- explanation:"System ready."
+classification:"LOW / NORMAL RISK",
+score:0,
+explanation:"System ready."
 };
 
-let history=JSON.parse(localStorage.getItem("fisherSafeHistory")||"[]");
+let history=
+JSON.parse(
+localStorage.getItem("fisherSafeHistory")||"[]"
+);
+
 let lastAutoLog=0;
 
-/* 30-second real-time threat cooldown */
-let realTimeCooldownUntil=0;
-let cooldownTimer=null;
 
-function toast(t){
- const x=document.getElementById("toast");
- x.textContent=t;
- x.style.display="block";
- setTimeout(()=>x.style.display="none",2600)
+/* =========================================================
+   REAL-TIME THREAT COOLDOWN
+========================================================= */
+
+let threatCooldown=false;
+
+let cooldownSeconds=30;
+
+let cooldownInterval=null;
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+function toast(message){
+
+const element=document.getElementById("toast");
+
+element.textContent=message;
+
+element.style.display="block";
+
+setTimeout(function(){
+
+element.style.display="none";
+
+},2600);
+
 }
+
+
+/* =========================================================
+   STATUS FUNCTIONS
+========================================================= */
 
 function setStatus(id,active,text){
- const e=document.getElementById(id);
- e.textContent=active?"ACTIVE":"INACTIVE";
- e.className="value "+(active?"active":"inactive");
 
- if(text){
-  const t=document.getElementById(id.replace("Status","Text"));
-  if(t){
-   t.textContent=text;
-   t.className="status "+(active?"active":"inactive")
-  }
- }
+const element=document.getElementById(id);
+
+if(!element)return;
+
+element.textContent=active?"ACTIVE":"INACTIVE";
+
+element.className=
+"value "+(active?"active":"inactive");
+
+if(text){
+
+const statusElement=
+document.getElementById(
+id.replace("Status","Text")
+);
+
+if(statusElement){
+
+statusElement.textContent=text;
+
+statusElement.className=
+"status "+(active?"active":"inactive");
+
 }
+
+}
+
+}
+
 
 function setSensor(id,on){
- const e=document.getElementById(id);
- e.textContent=on?"ACTIVE":"INACTIVE";
- e.className="status "+(on?"active":"inactive")
+
+const element=document.getElementById(id);
+
+if(!element)return;
+
+element.textContent=
+on?"ACTIVE":"INACTIVE";
+
+element.className=
+"status "+(on?"active":"inactive");
+
 }
+
+
+/* =========================================================
+   MOTION PERMISSION
+========================================================= */
 
 async function requestMotion(){
- try{
-  if(typeof DeviceMotionEvent==="undefined"){
-   toast("Motion sensors are not available in this environment.");
-   return false
-  }
 
-  if(typeof DeviceMotionEvent.requestPermission==="function"){
-   const p=await DeviceMotionEvent.requestPermission();
-   if(p!=="granted")throw Error("Motion permission denied")
-  }
+try{
 
-  if(typeof DeviceOrientationEvent?.requestPermission==="function"){
-   const p=await DeviceOrientationEvent.requestPermission();
-   if(p!=="granted")throw Error("Orientation permission denied")
-  }
+if(typeof DeviceMotionEvent==="undefined"){
 
-  window.addEventListener("devicemotion",handleMotion,true);
-  window.addEventListener("deviceorientation",handleOrientation,true);
+toast(
+"Motion sensors are not available in this environment."
+);
 
-  return true
+return false;
 
- }catch(e){
-  toast("Motion permission: "+e.message);
-  return false
- }
 }
+
+if(
+typeof DeviceMotionEvent.requestPermission==="function"
+){
+
+const permission=
+await DeviceMotionEvent.requestPermission();
+
+if(permission!=="granted"){
+
+throw Error("Motion permission denied");
+
+}
+
+}
+
+if(
+typeof DeviceOrientationEvent!=="undefined" &&
+typeof DeviceOrientationEvent.requestPermission==="function"
+){
+
+const permission=
+await DeviceOrientationEvent.requestPermission();
+
+if(permission!=="granted"){
+
+throw Error("Orientation permission denied");
+
+}
+
+}
+
+window.addEventListener(
+"devicemotion",
+handleMotion,
+true
+);
+
+window.addEventListener(
+"deviceorientation",
+handleOrientation,
+true
+);
+
+return true;
+
+}catch(error){
+
+toast(
+"Motion permission: "+error.message
+);
+
+return false;
+
+}
+
+}
+
+
+/* =========================================================
+   GPS
+========================================================= */
 
 function requestGPS(){
- return new Promise(resolve=>{
-  if(!navigator.geolocation){
-   toast("GPS is unavailable.");
-   resolve(false);
-   return
-  }
 
-  navigator.geolocation.watchPosition(
-   pos=>{
-    gpsActive=true;
+return new Promise(function(resolve){
 
-    gps={
-     latitude:pos.coords.latitude,
-     longitude:pos.coords.longitude,
-     accuracy:pos.coords.accuracy,
-     speed:pos.coords.speed
-    };
+if(!navigator.geolocation){
 
-    document.getElementById("lat").textContent=gps.latitude.toFixed(6);
-    document.getElementById("lon").textContent=gps.longitude.toFixed(6);
-    document.getElementById("speed").textContent=((gps.speed||0)*3.6).toFixed(2)+" km/h";
+toast("GPS is unavailable.");
 
-    setStatus("gpsStatus",true,"Receiving GPS");
+resolve(false);
 
-    resolve(true)
-   },
-   err=>{
-    setStatus("gpsStatus",false,"GPS unavailable: "+err.message);
-    resolve(false)
-   },
-   {
-    enableHighAccuracy:true,
-    maximumAge:1000,
-    timeout:10000
-   }
-  )
- })
+return;
+
 }
+
+navigator.geolocation.watchPosition(
+
+function(position){
+
+gpsActive=true;
+
+gps={
+latitude:position.coords.latitude,
+longitude:position.coords.longitude,
+accuracy:position.coords.accuracy,
+speed:position.coords.speed
+};
+
+document.getElementById("lat").textContent=
+gps.latitude.toFixed(6);
+
+document.getElementById("lon").textContent=
+gps.longitude.toFixed(6);
+
+document.getElementById("speed").textContent=
+((gps.speed||0)*3.6).toFixed(2)+" km/h";
+
+setStatus(
+"gpsStatus",
+true,
+"Receiving GPS"
+);
+
+resolve(true);
+
+},
+
+function(error){
+
+setStatus(
+"gpsStatus",
+false,
+"GPS unavailable: "+error.message
+);
+
+resolve(false);
+
+},
+
+{
+enableHighAccuracy:true,
+maximumAge:1000,
+timeout:10000
+}
+
+);
+
+});
+
+}
+
+
+/* =========================================================
+   MICROPHONE
+========================================================= */
 
 async function requestMic(){
- try{
-  const s=await navigator.mediaDevices.getUserMedia({audio:true});
-  s.getTracks().forEach(t=>t.stop());
 
-  micActive=true;
-  setStatus("micStatus",true,"Permission granted");
-  toast("Microphone permission granted.");
+try{
 
-  return true
+if(
+!navigator.mediaDevices ||
+!navigator.mediaDevices.getUserMedia
+){
 
- }catch(e){
-  setStatus("micStatus",false,"Permission denied");
-  return false
- }
+setStatus(
+"micStatus",
+false,
+"Microphone API unavailable"
+);
+
+return false;
+
 }
+
+const stream=
+await navigator.mediaDevices.getUserMedia({
+audio:true
+});
+
+stream
+.getTracks()
+.forEach(function(track){
+track.stop();
+});
+
+micActive=true;
+
+setStatus(
+"micStatus",
+true,
+"Permission granted"
+);
+
+toast(
+"Microphone permission granted."
+);
+
+return true;
+
+}catch(error){
+
+setStatus(
+"micStatus",
+false,
+"Permission denied"
+);
+
+return false;
+
+}
+
+}
+
+
+/* =========================================================
+   BATTERY
+========================================================= */
 
 async function batteryInit(){
- try{
-  if(navigator.getBattery){
-   const b=await navigator.getBattery();
 
-   const update=()=>{
-    battery=Math.round(b.level*100);
-    document.getElementById("batteryStatus").textContent=battery+"%";
-    document.getElementById("batteryText").textContent=battery<20?"Low battery":"Available";
-    document.getElementById("batteryText").className="status "+(battery<20?"warn":"active")
-   };
+try{
 
-   b.addEventListener("levelchange",update);
-   update()
-  }else{
-   document.getElementById("batteryText").textContent="Battery API unavailable"
-  }
+if(navigator.getBattery){
 
- }catch(e){
-  document.getElementById("batteryText").textContent="Unavailable"
- }
+const batteryObject=
+await navigator.getBattery();
+
+const update=function(){
+
+battery=
+Math.round(
+batteryObject.level*100
+);
+
+document.getElementById(
+"batteryStatus"
+).textContent=
+battery+"%";
+
+document.getElementById(
+"batteryText"
+).textContent=
+battery<20
+?"Low battery"
+:"Available";
+
+document.getElementById(
+"batteryText"
+).className=
+"status "+
+(
+battery<20
+?"warn"
+:"active"
+);
+
+};
+
+batteryObject.addEventListener(
+"levelchange",
+update
+);
+
+update();
+
+}else{
+
+document.getElementById(
+"batteryText"
+).textContent=
+"Battery API unavailable";
+
 }
+
+}catch(error){
+
+document.getElementById(
+"batteryText"
+).textContent=
+"Unavailable";
+
+}
+
+}
+
+
+/* =========================================================
+   PERMISSIONS
+========================================================= */
 
 async function permissions(){
- await requestMotion();
- await requestGPS();
- await requestMic();
- await batteryInit();
- toast("Permission checks completed.")
+
+await requestMotion();
+
+await requestGPS();
+
+await requestMic();
+
+await batteryInit();
+
+toast(
+"Permission checks completed."
+);
+
+diagnostics();
+
 }
 
-function handleMotion(e){
 
- const a=e.accelerationIncludingGravity||e.acceleration;
+/* =========================================================
+   MOTION SENSOR
+========================================================= */
 
- if(a){
+function handleMotion(event){
 
-  lastMotion={
-   x:+(a.x||0),
-   y:+(a.y||0),
-   z:+(a.z||0)
-  };
+const acceleration=
+event.accelerationIncludingGravity ||
+event.acceleration;
 
-  ["X","Y","Z"].forEach((k,i)=>{
-   const v=lastMotion[k.toLowerCase()];
-   document.getElementById("acc"+k).textContent=v.toFixed(2);
-   setSensor("acc"+k+"S",true)
-  });
+if(acceleration){
 
-  document.getElementById("accMag").textContent=
-   Math.hypot(lastMotion.x,lastMotion.y,lastMotion.z).toFixed(2);
+lastMotion={
+x:+(acceleration.x||0),
+y:+(acceleration.y||0),
+z:+(acceleration.z||0)
+};
 
-  motionActive=true;
+document.getElementById("accX").textContent=
+lastMotion.x.toFixed(2);
 
-  setStatus(
-   "motionStatus",
-   true,
-   "Receiving sensor data"
-  );
+document.getElementById("accY").textContent=
+lastMotion.y.toFixed(2);
 
-  detectAuto()
- }
+document.getElementById("accZ").textContent=
+lastMotion.z.toFixed(2);
 
- const r=e.rotationRate;
+setSensor("accXS",true);
+setSensor("accYS",true);
+setSensor("accZS",true);
 
- if(r){
+document.getElementById("accMag").textContent=
+Math.hypot(
+lastMotion.x,
+lastMotion.y,
+lastMotion.z
+).toFixed(2);
 
-  lastGyro={
-   alpha:+(r.alpha||0),
-   beta:+(r.beta||0),
-   gamma:+(r.gamma||0)
-  };
+motionActive=true;
 
-  document.getElementById("gyroA").textContent=lastGyro.alpha.toFixed(2);
-  document.getElementById("gyroB").textContent=lastGyro.beta.toFixed(2);
-  document.getElementById("gyroG").textContent=lastGyro.gamma.toFixed(2);
+setStatus(
+"motionStatus",
+true,
+"Receiving sensor data"
+);
 
-  document.getElementById("gyroMag").textContent=
-   Math.hypot(
-    lastGyro.alpha,
-    lastGyro.beta,
-    lastGyro.gamma
-   ).toFixed(2);
+detectAuto();
 
-  ["A","B","G"].forEach(k=>
-   setSensor("gyro"+k+"S",true)
-  );
-
-  gyroActive=true
- }
-
- diagnostics()
 }
 
-function handleOrientation(e){
+const rotation=
+event.rotationRate;
 
- lastOri={
-  alpha:+(e.alpha||0),
-  beta:+(e.beta||0),
-  gamma:+(e.gamma||0)
- };
+if(rotation){
 
- document.getElementById("oriA").textContent=
-  lastOri.alpha.toFixed(2);
+lastGyro={
+alpha:+(rotation.alpha||0),
+beta:+(rotation.beta||0),
+gamma:+(rotation.gamma||0)
+};
 
- document.getElementById("oriB").textContent=
-  lastOri.beta.toFixed(2);
+document.getElementById("gyroA").textContent=
+lastGyro.alpha.toFixed(2);
 
- document.getElementById("oriG").textContent=
-  lastOri.gamma.toFixed(2);
+document.getElementById("gyroB").textContent=
+lastGyro.beta.toFixed(2);
 
- orientationActive=true;
+document.getElementById("gyroG").textContent=
+lastGyro.gamma.toFixed(2);
 
- diagnostics()
+document.getElementById("gyroMag").textContent=
+Math.hypot(
+lastGyro.alpha,
+lastGyro.beta,
+lastGyro.gamma
+).toFixed(2);
+
+setSensor("gyroAS",true);
+setSensor("gyroBS",true);
+setSensor("gyroGS",true);
+
+gyroActive=true;
+
 }
+
+diagnostics();
+
+}
+
+
+/* =========================================================
+   ORIENTATION
+========================================================= */
+
+function handleOrientation(event){
+
+lastOri={
+alpha:+(event.alpha||0),
+beta:+(event.beta||0),
+gamma:+(event.gamma||0)
+};
+
+document.getElementById("oriA").textContent=
+lastOri.alpha.toFixed(2);
+
+document.getElementById("oriB").textContent=
+lastOri.beta.toFixed(2);
+
+document.getElementById("oriG").textContent=
+lastOri.gamma.toFixed(2);
+
+orientationActive=true;
+
+diagnostics();
+
+}
+
+
+/* =========================================================
+   DIAGNOSTICS
+========================================================= */
 
 function diagnostics(){
 
- document.getElementById("diagnostics").textContent=
- `Motion: ${motionActive?"ACTIVE":"INACTIVE"}
-Gyroscope: ${gyroActive?"ACTIVE":"INACTIVE"}
-Orientation: ${orientationActive?"ACTIVE":"INACTIVE"}
-GPS: ${gpsActive?"ACTIVE":"INACTIVE"}
-Microphone: ${micActive?"ACTIVE":"INACTIVE"}
-Battery: ${battery===null?"N/A":battery+"%"}`
+document.getElementById(
+"diagnostics"
+).textContent=
+
+"Motion: "+
+(motionActive?"ACTIVE":"INACTIVE")+
+
+"\nGyroscope: "+
+(gyroActive?"ACTIVE":"INACTIVE")+
+
+"\nOrientation: "+
+(orientationActive?"ACTIVE":"INACTIVE")+
+
+"\nGPS: "+
+(gpsActive?"ACTIVE":"INACTIVE")+
+
+"\nMicrophone: "+
+(micActive?"ACTIVE":"INACTIVE")+
+
+"\nBattery: "+
+(
+battery===null
+?"N/A"
+:battery+"%"
+);
+
 }
+
+
+/* =========================================================
+   START MONITORING
+========================================================= */
 
 function startMonitoring(){
 
- monitoring=true;
+monitoring=true;
 
- realTimeCooldownUntil=0;
+document.getElementById(
+"currentThreat"
+).innerHTML=
 
- if(cooldownTimer){
-  clearInterval(cooldownTimer);
-  cooldownTimer=null
- }
+"<h3>MONITORING ACTIVE</h3>"+
+"<p>Sensor data is being observed locally for abnormal conditions.</p>";
 
- document.getElementById("currentThreat").innerHTML=
- `<h3>MONITORING ACTIVE</h3>
- <p>Real-time sensor data is being observed locally for abnormal maritime movement and possible hazardous conditions.</p>`;
+toast("Monitoring started.");
 
- toast("Monitoring started.");
- diagnostics()
+diagnostics();
+
 }
+
+
+/* =========================================================
+   STOP MONITORING
+========================================================= */
 
 function stopMonitoring(){
 
- monitoring=false;
+monitoring=false;
 
- realTimeCooldownUntil=0;
+toast("Monitoring stopped.");
 
- if(cooldownTimer){
-  clearInterval(cooldownTimer);
-  cooldownTimer=null
- }
-
- toast("Monitoring stopped.")
 }
 
-/*
- REAL-TIME THREAT DETECTION
 
- Normal result:
- - No cooldown.
- - Another assessment can happen immediately.
+/* =========================================================
+   COOLDOWN
+========================================================= */
 
- Threat result:
- - 30-second cooldown.
- - Current threat result remains displayed.
- - Countdown is displayed.
-*/
+function startThreatCooldown(){
+
+if(threatCooldown)return;
+
+threatCooldown=true;
+
+cooldownSeconds=30;
+
+const box=
+document.getElementById("cooldownBox");
+
+const timer=
+document.getElementById("cooldownTimer");
+
+box.classList.remove("hidden");
+
+timer.textContent=cooldownSeconds;
+
+clearInterval(cooldownInterval);
+
+cooldownInterval=
+setInterval(function(){
+
+cooldownSeconds--;
+
+timer.textContent=cooldownSeconds;
+
+if(cooldownSeconds<=0){
+
+clearInterval(cooldownInterval);
+
+threatCooldown=false;
+
+box.classList.add("hidden");
+
+toast(
+"Real-time threat assessment resumed."
+);
+
+}
+
+},1000);
+
+}
+
+
+/* =========================================================
+   AUTOMATIC REAL-TIME THREAT DETECTION
+========================================================= */
+
 function detectAuto(){
 
- if(!monitoring)return;
-
- const now=Date.now();
-
- /* If a threat cooldown is active, do not reassess. */
- if(now<realTimeCooldownUntil){
-  return
- }
-
- const am=Math.hypot(
-  lastMotion.x,
-  lastMotion.y,
-  lastMotion.z
- );
-
- const gm=Math.hypot(
-  lastGyro.alpha,
-  lastGyro.beta,
-  lastGyro.gamma
- );
-
- let score=0;
- let reasons=[];
-
- if(am>25){
-  score+=4;
-  reasons.push("Very high acceleration/motion detected.")
- }
- else if(am>16){
-  score+=2;
-  reasons.push("Unusual acceleration detected.")
- }
-
- if(gm>250){
-  score+=3;
-  reasons.push("Very rapid rotational movement detected.")
- }
- else if(gm>120){
-  score+=1;
-  reasons.push("Elevated rotational movement detected.")
- }
-
- if(
-  Math.abs(lastOri.beta)>70 ||
-  Math.abs(lastOri.gamma)>70
- ){
-  score+=2;
-  reasons.push("Phone orientation indicates a steep tilt.")
- }
-
- const cls=
-  score>=6
-   ?"HIGH RISK / POSSIBLE EMERGENCY"
-   :score>=3
-   ?"WARNING / POSSIBLE THREAT"
-   :"LOW / NORMAL RISK";
-
- const explanation=
-  reasons.join(" ") ||
-  "No significant abnormal sensor pattern detected.";
-
- /*
-  NORMAL:
-  No cooldown is started.
- */
- if(score===0){
-
-  lastThreat={
-   classification:cls,
-   score,
-   explanation
-  };
-
-  updateThreat(
-   cls,
-   score,
-   explanation,
-   false
-  );
-
-  return
- }
-
- /*
-  THREAT:
-  Save the assessment and start 30-second cooldown.
- */
- if(Date.now()-lastAutoLog>5000){
-
-  lastAutoLog=Date.now();
-
-  saveThreat(
-   cls,
-   explanation,
-   score
-  );
-
-  lastThreat={
-   classification:cls,
-   score,
-   explanation
-  };
-
-  startThreatCooldown(
-   cls,
-   score,
-   explanation
-  )
- }
-}
+if(!monitoring)return;
 
 /*
- Start the 30-second cooldown only for detected threats.
+Do not assess while a previous abnormal
+assessment is in its 30-second cooldown.
 */
-function startThreatCooldown(cls,score,explanation){
 
- realTimeCooldownUntil=Date.now()+30000;
+if(threatCooldown)return;
 
- if(cooldownTimer){
-  clearInterval(cooldownTimer)
- }
+const accelerationMagnitude=
+Math.hypot(
+lastMotion.x,
+lastMotion.y,
+lastMotion.z
+);
 
- updateThreat(
-  cls,
-  score,
-  explanation,
-  true
- );
+const gyroMagnitude=
+Math.hypot(
+lastGyro.alpha,
+lastGyro.beta,
+lastGyro.gamma
+);
 
- cooldownTimer=setInterval(()=>{
+let score=0;
 
-  const remaining=Math.max(
-   0,
-   realTimeCooldownUntil-Date.now()
-  );
+let reasons=[];
 
-  if(remaining<=0){
 
-   clearInterval(cooldownTimer);
-   cooldownTimer=null;
-   realTimeCooldownUntil=0;
+/* Acceleration */
 
-   const box=document.getElementById("currentThreat");
+if(accelerationMagnitude>25){
 
-   box.className="result "+
-    (score>=6
-     ?"danger-result"
-     :"warning");
+score+=4;
 
-   box.innerHTML=
-    `<h3>${cls}</h3>
-     <p><b>Risk Score:</b> ${score}</p>
-     <p>${explanation}</p>
-     <p class="status active">
-     ✓ Real-time assessment ready again.
-     </p>`;
+reasons.push(
+"Very high acceleration/motion detected."
+);
 
-   return
-  }
+}else if(accelerationMagnitude>16){
 
-  updateThreat(
-   cls,
-   score,
-   explanation,
-   true
-  )
+score+=2;
 
- },1000)
+reasons.push(
+"Unusual acceleration detected."
+);
+
 }
 
-function updateThreat(
- cls,
- score,
- explanation,
- cooldown=false
+
+/* Rotation */
+
+if(gyroMagnitude>250){
+
+score+=3;
+
+reasons.push(
+"Very rapid rotational movement detected."
+);
+
+}else if(gyroMagnitude>120){
+
+score+=1;
+
+reasons.push(
+"Elevated rotational movement detected."
+);
+
+}
+
+
+/* Orientation */
+
+if(
+Math.abs(lastOri.beta)>70 ||
+Math.abs(lastOri.gamma)>70
 ){
 
- const box=document.getElementById("currentThreat");
+score+=2;
 
- box.className=
-  "result "+
-  (
-   score>=6
-    ?"danger-result"
-    :score>=3
-    ?"warning"
-    :"safe"
-  );
+reasons.push(
+"Phone orientation indicates a steep tilt."
+);
 
- let countdown="";
-
- if(cooldown){
-
-  const remaining=Math.max(
-   0,
-   Math.ceil(
-    (realTimeCooldownUntil-Date.now())/1000
-   )
-  );
-
-  countdown=
-   `<p class="status warn">
-   ⏳ Next real-time assessment in ${remaining} seconds.
-   </p>`
- }
-
- box.innerHTML=
-  `<h3>${cls}</h3>
-   <p><b>Risk Score:</b> ${score}</p>
-   <p>${explanation}</p>
-   ${countdown}`
 }
+
+
+/*
+Normal means there is no abnormal sensor pattern.
+IMPORTANT: Normal does NOT start cooldown.
+*/
+
+let classification;
+
+if(score>=6){
+
+classification=
+"HIGH RISK / POSSIBLE EMERGENCY";
+
+}else if(score>=3){
+
+classification=
+"WARNING / POSSIBLE THREAT";
+
+}else{
+
+classification=
+"LOW / NORMAL RISK";
+
+}
+
+
+/* Save abnormal event */
+
+if(
+score>0 &&
+Date.now()-lastAutoLog>5000
+){
+
+lastAutoLog=Date.now();
+
+const explanation=
+reasons.join(" ");
+
+saveThreat(
+classification,
+explanation,
+score
+);
+
+lastThreat={
+classification:classification,
+score:score,
+explanation:explanation
+};
+
+}
+
+
+/* Display result */
+
+updateThreat(
+classification,
+score,
+reasons.join(" ") ||
+"No significant abnormal sensor pattern detected."
+);
+
+
+/*
+Only abnormal classifications trigger
+the 30-second cooldown.
+*/
+
+if(score>0){
+
+startThreatCooldown();
+
+}
+
+}
+
+
+/* =========================================================
+   UPDATE REAL-TIME REPORT
+========================================================= */
+
+function updateThreat(
+classification,
+score,
+explanation
+){
+
+const box=
+document.getElementById(
+"currentThreat"
+);
+
+let className="safe";
+
+if(score>=6){
+
+className="danger-result";
+
+}else if(score>=3){
+
+className="warning";
+
+}
+
+box.className=
+"result "+className;
+
+box.innerHTML=
+
+"<h3>"+
+classification+
+"</h3>"+
+
+"<p><b>Risk Score:</b> "+
+score+
+"</p>"+
+
+"<p>"+
+explanation+
+"</p>";
+
+}
+
+
+/* =========================================================
+   ML THREAT CLASSIFICATION
+========================================================= */
 
 function manualClassify(){
 
- const vals=[
-  "wave",
-  "motion",
-  "gpsRisk",
-  "audio",
-  "engine",
-  "human"
- ].map(id=>+document.getElementById(id).value);
+const values=[
+"wave",
+"motion",
+"gpsRisk",
+"audio",
+"engine",
+"human"
+].map(function(id){
 
- const names=[
-  "Severe wave conditions",
-  "Unusual/extreme motion",
-  "GPS abnormality or unavailable",
-  "Unusual/distress audio",
-  "Mechanical/engine problem",
-  "Human observation of danger"
- ];
+return +document.getElementById(id).value;
 
- let score=0;
- let reasons=[];
+});
 
- vals.forEach((v,i)=>{
+const names=[
 
-  if(v===1){
-   score+=1;
-   reasons.push(names[i]+" was reported.")
-  }
+"Severe wave conditions",
 
-  if(v===2){
-   score+=2;
-   reasons.push(
-    names[i]+" was reported as severe/critical."
-   )
-  }
- });
+"Unusual/extreme motion",
 
- const cls=
-  score>=7
-   ?"HIGH RISK / POSSIBLE EMERGENCY"
-   :score>=3
-   ?"WARNING / POSSIBLE THREAT"
-   :"LOW / NORMAL RISK";
+"GPS abnormality or unavailable",
 
- const exp=
-  reasons.length
-   ?reasons.join(" ")+" Immediate caution is recommended and emergency procedures should be considered if danger is confirmed."
-   :"The entered conditions do not currently indicate a significant threat. Continue monitoring and maintain awareness.";
+"Unusual/distress audio",
 
- lastThreat={
-  classification:cls,
-  score,
-  explanation:exp
- };
+"Mechanical/engine problem",
 
- updateThreat(
-  cls,
-  score,
-  exp,
-  false
- );
+"Human observation of danger"
 
- document.getElementById("manualResult").innerHTML=
- `<div class="result ${
-  score>=7
-   ?"danger-result"
-   :score>=3
-   ?"warning"
-   :"safe"
- }">
- <h3>${cls}</h3>
- <p><b>Risk Score:</b> ${score}</p>
- <p>${exp}</p>
- </div>`;
+];
 
- saveThreat(
-  cls,
-  exp,
-  score
- );
+let score=0;
 
- toast("ML threat classification recorded.")
+let reasons=[];
+
+values.forEach(function(value,index){
+
+if(value===1){
+
+score+=1;
+
+reasons.push(
+names[index]+" was reported."
+);
+
 }
+
+if(value===2){
+
+score+=2;
+
+reasons.push(
+names[index]+
+" was reported as severe/critical."
+);
+
+}
+
+});
+
+
+let classification;
+
+if(score>=7){
+
+classification=
+"HIGH RISK / POSSIBLE EMERGENCY";
+
+}else if(score>=3){
+
+classification=
+"WARNING / POSSIBLE THREAT";
+
+}else{
+
+classification=
+"LOW / NORMAL RISK";
+
+}
+
+
+const explanation=
+
+reasons.length
+
+?
+
+reasons.join(" ")+
+" Immediate caution is recommended and emergency procedures should be considered if danger is confirmed."
+
+:
+
+"The entered conditions do not currently indicate a significant threat. Continue monitoring and maintain awareness.";
+
+
+lastThreat={
+
+classification:classification,
+
+score:score,
+
+explanation:explanation
+
+};
+
+
+document.getElementById(
+"manualResult"
+).innerHTML=
+
+"<div class='result "+
+(
+score>=7
+?"danger-result"
+:
+score>=3
+?"warning"
+:"safe"
+)+
+"'>"+
+
+"<h3>"+
+classification+
+"</h3>"+
+
+"<p><b>Risk Score:</b> "+
+score+
+"</p>"+
+
+"<p>"+
+explanation+
+"</p>"+
+
+"</div>";
+
+
+saveThreat(
+classification,
+explanation,
+score
+);
+
+toast(
+"ML threat classification recorded."
+);
+
+}
+
+
+/* =========================================================
+   SAVE THREAT
+========================================================= */
 
 function saveThreat(
- classification,
- explanation,
- score
+classification,
+explanation,
+score
 ){
 
- const row={
-  id:Date.now(),
-  timestamp:new Date().toISOString(),
-  classification,
-  explanation,
-  riskScore:score,
+const row={
 
-  accelerometerX:lastMotion.x,
-  accelerometerY:lastMotion.y,
-  accelerometerZ:lastMotion.z,
+id:Date.now(),
 
-  accelerationMagnitude:
-   Math.hypot(
-    lastMotion.x,
-    lastMotion.y,
-    lastMotion.z
-   ),
+timestamp:
+new Date().toISOString(),
 
-  gyroscopeAlpha:lastGyro.alpha,
-  gyroscopeBeta:lastGyro.beta,
-  gyroscopeGamma:lastGyro.gamma,
+classification:classification,
 
-  orientationAlpha:lastOri.alpha,
-  orientationBeta:lastOri.beta,
-  orientationGamma:lastOri.gamma,
+explanation:explanation,
 
-  latitude:gps.latitude,
-  longitude:gps.longitude,
-  speed:gps.speed,
-  battery
- };
+riskScore:score,
 
- history.unshift(row);
+accelerometerX:lastMotion.x,
 
- history=history.slice(0,500);
+accelerometerY:lastMotion.y,
 
- localStorage.setItem(
-  "fisherSafeHistory",
-  JSON.stringify(history)
+accelerometerZ:lastMotion.z,
+
+accelerationMagnitude:
+Math.hypot(
+lastMotion.x,
+lastMotion.y,
+lastMotion.z
+),
+
+gyroscopeAlpha:lastGyro.alpha,
+
+gyroscopeBeta:lastGyro.beta,
+
+gyroscopeGamma:lastGyro.gamma,
+
+orientationAlpha:lastOri.alpha,
+
+orientationBeta:lastOri.beta,
+
+orientationGamma:lastOri.gamma,
+
+latitude:gps.latitude,
+
+longitude:gps.longitude,
+
+speed:gps.speed,
+
+battery:battery
+
+};
+
+history.unshift(row);
+
+history=
+history.slice(0,500);
+
+localStorage.setItem(
+"fisherSafeHistory",
+JSON.stringify(history)
+);
+
 }
+
+
+/* =========================================================
+   HISTORY
+========================================================= */
 
 function displayHistory(){
 
- const c=document.getElementById("historyList");
+const container=
+document.getElementById(
+"historyList"
+);
 
- if(!history.length){
-  c.innerHTML="<p>No threat records available.</p>";
-  return
- }
+if(!history.length){
 
- c.innerHTML=history.map(x=>
-  `<div class="history-item">
-  <b>${x.classification}</b><br>
-  <span class="small">
-  ${new Date(x.timestamp).toLocaleString()}
-  </span>
-  <p>${x.explanation}</p>
-  <b>Risk:</b> ${x.riskScore}<br>
-  <b>GPS:</b> ${
-   x.latitude==null
-    ?"Unavailable"
-    :x.latitude+", "+x.longitude
-  }
-  </div>`
- ).join("")
+container.innerHTML=
+"<p>No threat records available.</p>";
+
+return;
+
 }
+
+container.innerHTML=
+history.map(function(item){
+
+return`
+
+<div class="history-item">
+
+<b>${item.classification}</b>
+
+<br>
+
+<span class="small">
+${new Date(item.timestamp).toLocaleString()}
+</span>
+
+<p>
+${item.explanation}
+</p>
+
+<b>Risk:</b>
+${item.riskScore}
+
+<br>
+
+<b>GPS:</b>
+${
+item.latitude==null
+?"Unavailable"
+:
+item.latitude+", "+item.longitude
+}
+
+</div>
+
+`;
+
+}).join("");
+
+}
+
+
+/* =========================================================
+   DOWNLOAD FILE
+========================================================= */
 
 function downloadFile(
- content,
- name,
- type
+content,
+name,
+type
 ){
 
- const blob=new Blob(
-  [content],
-  {type}
- );
+const blob=
+new Blob(
+[content],
+{type:type}
+);
 
- const url=URL.createObjectURL(blob);
+const url=
+URL.createObjectURL(blob);
 
- const a=document.createElement("a");
+const anchor=
+document.createElement("a");
 
- a.href=url;
- a.download=name;
+anchor.href=url;
 
- document.body.appendChild(a);
+anchor.download=name;
 
- a.click();
+document.body.appendChild(anchor);
 
- a.remove();
+anchor.click();
 
- setTimeout(
-  ()=>URL.revokeObjectURL(url),
-  500
- )
+anchor.remove();
+
+setTimeout(function(){
+
+URL.revokeObjectURL(url);
+
+},500);
+
 }
+
+
+/* =========================================================
+   CSV
+========================================================= */
 
 function csvExport(){
 
- if(!history.length){
-  toast("No history to export.");
-  return
- }
+if(!history.length){
 
- const h=Object.keys(history[0]);
+toast(
+"No history to export."
+);
 
- const csv=[
-  h.join(","),
-  ...history.map(r=>
-   h.map(k=>
-    `"${String(r[k]??"").replace(/"/g,'""')}"`
-   ).join(",")
-  )
- ].join("\n");
+return;
 
- downloadFile(
-  csv,
-  "fisherSafe_threat_history.csv",
-  "text/csv"
- )
 }
+
+const headers=
+Object.keys(history[0]);
+
+const csv=
+
+[
+
+headers.join(","),
+
+...history.map(function(row){
+
+return headers.map(function(key){
+
+return '"'+
+String(row[key]??"")
+.replace(/"/g,'""')+
+'"';
+
+}).join(",");
+
+})
+
+].join("\n");
+
+downloadFile(
+csv,
+"fisherSafe_threat_history.csv",
+"text/csv"
+);
+
+}
+
+
+/* =========================================================
+   JSON
+========================================================= */
 
 function jsonExport(){
 
- if(!history.length){
-  toast("No history to export.");
-  return
- }
+if(!history.length){
 
- downloadFile(
-  JSON.stringify(history,null,2),
-  "fisherSafe_threat_history.json",
-  "application/json"
- )
+toast(
+"No history to export."
+);
+
+return;
+
 }
+
+downloadFile(
+
+JSON.stringify(
+history,
+null,
+2
+),
+
+"fisherSafe_threat_history.json",
+
+"application/json"
+
+);
+
+}
+
+
+/* =========================================================
+   EMERGENCY MESSAGE
+========================================================= */
 
 function generateMessage(){
 
- const name=
-  document.getElementById("fisherName").value ||
-  "Fisherman";
+const name=
+document.getElementById(
+"fisherName"
+).value ||
+"Fisherman";
 
- const number=
-  document.getElementById("emergencyNumber")
-  .value.trim();
+const number=
+document.getElementById(
+"emergencyNumber"
+).value.trim();
 
- const loc=
-  gps.latitude==null
-   ?"GPS Location: Unavailable"
-   :`GPS Location: ${gps.latitude.toFixed(6)}, ${gps.longitude.toFixed(6)}`;
+const location=
 
- const msg=
- `EMERGENCY MARITIME DISTRESS ALERT - FISHERSAFE
+gps.latitude==null
 
-Fisherman: ${name}
-Threat Status: ${lastThreat.classification}
-Risk Score: ${lastThreat.score}
-${loc}
-Battery: ${battery===null?"Unavailable":battery+"%"}
-Time: ${new Date().toLocaleString()}
+?
 
-${lastThreat.explanation}
+"GPS Location: Unavailable"
 
-Please provide immediate assistance if possible.`;
+:
 
- document.getElementById("emergencyMessage").value=msg;
+"GPS Location: "+
+gps.latitude.toFixed(6)+
+", "+
+gps.longitude.toFixed(6);
 
- document.getElementById("smsStatus").innerHTML=
- `<p class="small">
- Message prepared for ${
-  number||"the emergency contact"
- }.
- </p>`
+
+const message=
+
+"EMERGENCY MARITIME DISTRESS ALERT - FISHERSAFE\n\n"+
+
+"Fisherman: "+
+name+
+"\n"+
+
+"Threat Status: "+
+lastThreat.classification+
+"\n"+
+
+"Risk Score: "+
+lastThreat.score+
+"\n"+
+
+location+
+"\n"+
+
+"Battery: "+
+(
+battery===null
+?"Unavailable"
+:battery+"%"
+)+
+"\n"+
+
+"Time: "+
+new Date().toLocaleString()+
+"\n\n"+
+
+lastThreat.explanation+
+"\n\n"+
+
+"Please provide immediate assistance if possible.";
+
+
+document.getElementById(
+"emergencyMessage"
+).value=
+message;
+
+
+document.getElementById(
+"smsStatus"
+).innerHTML=
+
+"<p class='small'>"+
+"Message prepared for "+
+(number||"the emergency contact")+
+".</p>";
+
 }
+
+
+/* =========================================================
+   SMS
+========================================================= */
 
 function sendSMS(){
 
- let n=
-  document.getElementById("emergencyNumber")
-  .value.trim();
+const number=
+document.getElementById(
+"emergencyNumber"
+).value.trim();
 
- if(!n){
-  toast("Enter an emergency number first.");
-  return
- }
+if(!number){
 
- if(
-  !document.getElementById("emergencyMessage")
-  .value
- ){
-  generateMessage()
- }
+toast(
+"Enter an emergency number first."
+);
 
- const m=
-  document.getElementById("emergencyMessage")
-  .value;
+return;
 
- window.location.href=
-  "sms:"+encodeURIComponent(n)+
-  "?body="+encodeURIComponent(m);
-
- document.getElementById("smsStatus").innerHTML=
- `<p class='small'>
- The phone messaging application should open.
- Review the message and press Send.
- </p>`
 }
+
+if(
+!document.getElementById(
+"emergencyMessage"
+).value
+){
+
+generateMessage();
+
+}
+
+const message=
+document.getElementById(
+"emergencyMessage"
+).value;
+
+
+/*
+Use normal sms: URI.
+Android WebView handles this more
+reliably than encoding the number.
+*/
+
+window.location.href=
+"sms:"+number+
+"?body="+
+encodeURIComponent(message);
+
+}
+
+
+/* =========================================================
+   WHATSAPP
+========================================================= */
+
+function sendWhatsApp(){
+
+const number=
+document.getElementById(
+"emergencyNumber"
+).value.trim();
+
+if(!number){
+
+toast(
+"Enter an emergency number first."
+);
+
+return;
+
+}
+
+if(
+!document.getElementById(
+"emergencyMessage"
+).value
+){
+
+generateMessage();
+
+}
+
+const message=
+document.getElementById(
+"emergencyMessage"
+).value;
+
+
+/*
+Remove spaces, brackets and hyphens.
+Keep country code.
+*/
+
+const cleanNumber=
+number.replace(
+/[^0-9]/g,
+""
+);
+
+const url=
+"https://wa.me/"+
+cleanNumber+
+"?text="+
+encodeURIComponent(message);
+
+window.open(
+url,
+"_system"
+);
+
+}
+
+
+/* =========================================================
+   COPY MESSAGE
+========================================================= */
 
 async function copyMsg(){
 
- if(
-  !document.getElementById("emergencyMessage")
-  .value
- ){
-  generateMessage()
- }
+if(
+!document.getElementById(
+"emergencyMessage"
+).value
+){
 
- try{
+generateMessage();
 
-  await navigator.clipboard.writeText(
-   document.getElementById("emergencyMessage").value
-  );
-
-  toast("Message copied.")
-
- }catch(e){
-
-  toast("Copy unavailable.")
- }
 }
+
+try{
+
+await navigator.clipboard.writeText(
+
+document.getElementById(
+"emergencyMessage"
+).value
+
+);
+
+toast(
+"Message copied."
+);
+
+}catch(error){
+
+toast(
+"Copy unavailable."
+);
+
+}
+
+}
+
+
+/* =========================================================
+   SHARE
+========================================================= */
 
 async function shareMsg(){
 
- if(
-  !document.getElementById("emergencyMessage")
-  .value
- ){
-  generateMessage()
- }
+if(
+!document.getElementById(
+"emergencyMessage"
+).value
+){
 
- if(navigator.share){
+generateMessage();
 
-  try{
-
-   await navigator.share({
-    title:"FisherSafe Emergency Alert",
-    text:document.getElementById("emergencyMessage").value
-   })
-
-  }catch(e){}
-
- }else{
-
-  toast("Sharing unavailable. Use Copy.")
- }
 }
 
-document.getElementById("permissionsBtn").onclick=permissions;
-document.getElementById("startBtn").onclick=startMonitoring;
-document.getElementById("stopBtn").onclick=stopMonitoring;
-document.getElementById("classifyBtn").onclick=manualClassify;
-document.getElementById("csvBtn").onclick=csvExport;
-document.getElementById("jsonBtn").onclick=jsonExport;
-document.getElementById("generateBtn").onclick=generateMessage;
-document.getElementById("smsBtn").onclick=sendSMS;
-document.getElementById("copyBtn").onclick=copyMsg;
-document.getElementById("shareBtn").onclick=shareMsg;
+if(navigator.share){
 
-document.getElementById("clearBtn").onclick=()=>{
- if(confirm("Delete all threat history?")){
-  history=[];
-  localStorage.removeItem("fisherSafeHistory");
-  displayHistory()
- }
-};
+try{
+
+await navigator.share({
+
+title:
+"FisherSafe Emergency Alert",
+
+text:
+document.getElementById(
+"emergencyMessage"
+).value
+
+});
+
+}catch(error){}
+
+}else{
+
+toast(
+"Sharing unavailable. Use Copy."
+);
+
+}
+
+}
+
+
+/* =========================================================
+   CLEAR HISTORY
+========================================================= */
+
+function clearHistory(){
+
+if(
+confirm(
+"Delete all threat history?"
+)
+){
+
+history=[];
+
+localStorage.removeItem(
+"fisherSafeHistory"
+);
+
+displayHistory();
+
+toast(
+"Threat history cleared."
+);
+
+}
+
+}
+
+
+/* =========================================================
+   BUTTON EVENTS
+========================================================= */
+
+document.getElementById(
+"permissionsBtn"
+).onclick=
+permissions;
+
+
+document.getElementById(
+"startBtn"
+).onclick=
+startMonitoring;
+
+
+document.getElementById(
+"stopBtn"
+).onclick=
+stopMonitoring;
+
+
+document.getElementById(
+"classifyBtn"
+).onclick=
+manualClassify;
+
+
+document.getElementById(
+"csvBtn"
+).onclick=
+csvExport;
+
+
+document.getElementById(
+"jsonBtn"
+).onclick=
+jsonExport;
+
+
+document.getElementById(
+"generateBtn"
+).onclick=
+generateMessage;
+
+
+document.getElementById(
+"smsBtn"
+).onclick=
+sendSMS;
+
+
+document.getElementById(
+"whatsappBtn"
+).onclick=
+sendWhatsApp;
+
+
+document.getElementById(
+"copyBtn"
+).onclick=
+copyMsg;
+
+
+document.getElementById(
+"shareBtn"
+).onclick=
+shareMsg;
+
+
+document.getElementById(
+"clearBtn"
+).onclick=
+clearHistory;
+
+
+/* =========================================================
+   INITIALIZE
+========================================================= */
 
 batteryInit();
+
 diagnostics();
+
+showPage("dashboard");
+
 </script>
 
 </body>
