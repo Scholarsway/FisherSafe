@@ -1,4 +1,3 @@
-```yaml
 name: Build FisherSafe Signed APK
 
 on:
@@ -220,4 +219,3 @@ jobs:
           name: FisherSafe-release-apk
           path: FisherSafe-release.apk
           if-no-files-found: error
-```
