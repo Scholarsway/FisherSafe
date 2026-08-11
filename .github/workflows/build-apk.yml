@@ -1,4 +1,4 @@
-```yaml
+
 name: Build FisherSafe Signed APK
 
 on:
@@ -238,4 +238,3 @@ jobs:
           name: FisherSafe-release-keystore
           path: fisherSafe-release.keystore
           if-no-files-found: error
-```
