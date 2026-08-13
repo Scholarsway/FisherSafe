@@ -9,59 +9,193 @@ jobs:
 
     steps:
 
-      # --------------------------------------------------
+      # ============================================================
       # 1. Checkout repository
-      # --------------------------------------------------
-      - name: Checkout
+      # ============================================================
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # --------------------------------------------------
-      # 2. Setup Node.js 24
-      # --------------------------------------------------
+
+      # ============================================================
+      # 2. Setup Node.js
+      # ============================================================
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: npm
+          cache: ""
 
-      # --------------------------------------------------
+
+      # ============================================================
       # 3. Setup Java 21
-      # --------------------------------------------------
+      # ============================================================
       - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: "21"
 
-      # --------------------------------------------------
-      # 4. Install dependencies
-      # --------------------------------------------------
-      - name: Install dependencies
-        run: npm install
 
-      # --------------------------------------------------
-      # 5. Ensure TypeScript is installed
-      # --------------------------------------------------
-      - name: Ensure TypeScript
-        run: npm install --save-dev typescript
+      # ============================================================
+      # 4. Check repository
+      # ============================================================
+      - name: Check repository
+        run: |
+          echo "===== Repository ====="
+          ls -la
 
-      # --------------------------------------------------
-      # 6. Create Android project
-      # --------------------------------------------------
+          echo ""
+          echo "===== WWW ====="
+          ls -la www || true
+
+
+      # ============================================================
+      # 5. Create package.json if it does not exist
+      # ============================================================
+      - name: Ensure package.json exists
+        run: |
+          if [ ! -f package.json ]; then
+
+            echo "package.json not found."
+            echo "Creating package.json..."
+
+            cat > package.json <<'EOF'
+          {
+            "name": "fishersafe",
+            "version": "1.0.0",
+            "description": "FisherSafe Offline Maritime Threat Detection Application",
+            "private": true,
+            "scripts": {},
+            "dependencies": {
+              "@capacitor/core": "^7.4.0",
+              "@capacitor/android": "^7.4.0"
+            },
+            "devDependencies": {
+              "@capacitor/cli": "^7.4.0",
+              "typescript": "^5.0.0"
+            }
+          }
+          EOF
+
+          else
+
+            echo "package.json already exists."
+            cat package.json
+
+          fi
+
+
+      # ============================================================
+      # 6. Install EXACT Capacitor 7 dependencies
+      # ============================================================
+      - name: Install Capacitor dependencies
+        run: |
+          npm install \
+            @capacitor/core@7.4.0 \
+            @capacitor/android@7.4.0 \
+            @capacitor/cli@7.4.0 \
+            typescript@5
+
+
+      # ============================================================
+      # 7. Create Capacitor configuration if missing
+      # ============================================================
+      - name: Ensure Capacitor configuration
+        run: |
+
+          if [ ! -f capacitor.config.ts ]; then
+
+            echo "capacitor.config.ts not found."
+            echo "Creating configuration..."
+
+            cat > capacitor.config.ts <<'EOF'
+          import type { CapacitorConfig } from '@capacitor/cli';
+
+          const config: CapacitorConfig = {
+            appId: 'com.fishersafe.app',
+            appName: 'FisherSafe',
+            webDir: 'www',
+            bundledWebRuntime: false
+          };
+
+          export default config;
+          EOF
+
+          else
+
+            echo "capacitor.config.ts already exists."
+            cat capacitor.config.ts
+
+          fi
+
+
+      # ============================================================
+      # 8. Verify FisherSafe web application
+      # ============================================================
+      - name: Verify web application
+        run: |
+
+          if [ ! -f www/index.html ]; then
+            echo "ERROR: www/index.html was not found."
+            exit 1
+          fi
+
+          echo "www/index.html found successfully."
+
+          echo ""
+          echo "File size:"
+          wc -c www/index.html
+
+
+      # ============================================================
+      # 9. Remove old generated Android folder if present
+      # ============================================================
+      - name: Prepare Android project
+        run: |
+
+          if [ -d android ]; then
+            echo "Existing Android folder found."
+            echo "Removing generated Android project..."
+            rm -rf android
+          fi
+
+
+      # ============================================================
+      # 10. Add Android platform
+      # ============================================================
       - name: Create Android project
-        run: npx cap add android
+        run: |
+          npx cap add android
 
-      # --------------------------------------------------
-      # 7. Add Android permissions safely
-      # --------------------------------------------------
+
+      # ============================================================
+      # 11. Add GPS and microphone permissions
+      # ============================================================
       - name: Configure Android permissions
         run: |
+
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
           manifest = Path("android/app/src/main/AndroidManifest.xml")
 
+          if not manifest.exists():
+              raise SystemExit(
+                  "ERROR: AndroidManifest.xml was not created."
+              )
+
           text = manifest.read_text()
+
+          # Find the opening <manifest ...> tag.
+          match = re.search(r'<manifest\b[^>]*>', text)
+
+          if not match:
+              raise SystemExit(
+                  "ERROR: Could not find the <manifest> element."
+              )
+
+          insert_position = match.end()
 
           permissions = [
               '<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />',
@@ -69,75 +203,89 @@ jobs:
               '<uses-permission android:name="android.permission.RECORD_AUDIO" />'
           ]
 
-          insert_position = text.find(">") + 1
+          additions = []
 
           for permission in permissions:
               if permission not in text:
-                  text = (
-                      text[:insert_position]
-                      + "\n    "
-                      + permission
-                      + text[insert_position:]
-                  )
-                  insert_position = text.find(">") + 1
+                  additions.append(permission)
+
+          if additions:
+              text = (
+                  text[:insert_position]
+                  + "\n"
+                  + "\n".join(additions)
+                  + "\n"
+                  + text[insert_position:]
+              )
 
           manifest.write_text(text)
 
-          print("Android permissions configured successfully.")
+          print("===== FINAL ANDROID MANIFEST =====")
+          print(text)
           PY
 
-      # --------------------------------------------------
-      # 8. Configure Java 21
-      # --------------------------------------------------
-      - name: Configure Java 21 compatibility
+
+      # ============================================================
+      # 12. Validate manifest structure
+      # ============================================================
+      - name: Validate Android manifest
         run: |
+
           python3 - <<'PY'
           from pathlib import Path
+          import xml.etree.ElementTree as ET
 
-          gradle_file = Path("android/app/build.gradle")
-          text = gradle_file.read_text()
+          manifest = Path(
+              "android/app/src/main/AndroidManifest.xml"
+          )
 
-          if "sourceCompatibility JavaVersion.VERSION_21" not in text:
-
-              compile_block = """
-              compileOptions {
-                  sourceCompatibility JavaVersion.VERSION_21
-                  targetCompatibility JavaVersion.VERSION_21
-              }
-              """
-
-              text = text.replace(
-                  "android {",
-                  "android {" + compile_block,
-                  1
+          try:
+              ET.parse(manifest)
+          except Exception as e:
+              raise SystemExit(
+                  f"ERROR: AndroidManifest.xml is invalid XML:\n{e}"
               )
 
-          gradle_file.write_text(text)
+          text = manifest.read_text()
 
-          print("Java 21 compatibility configured.")
+          required = [
+              "android.permission.ACCESS_FINE_LOCATION",
+              "android.permission.ACCESS_COARSE_LOCATION",
+              "android.permission.RECORD_AUDIO"
+          ]
+
+          for permission in required:
+
+              if permission not in text:
+                  raise SystemExit(
+                      f"ERROR: Missing permission: {permission}"
+                  )
+
+          print("AndroidManifest.xml is valid.")
+          print("GPS permissions confirmed.")
+          print("Microphone permission confirmed.")
           PY
 
-      # --------------------------------------------------
-      # 9. Copy web application
-      # --------------------------------------------------
-      - name: Copy web application
-        run: npx cap copy android
 
-      # --------------------------------------------------
-      # 10. Sync Capacitor
-      # --------------------------------------------------
+      # ============================================================
+      # 13. Sync Capacitor
+      # ============================================================
       - name: Sync Capacitor
-        run: npx cap sync android
-
-      # --------------------------------------------------
-      # 11. Generate release keystore INSIDE android folder
-      # --------------------------------------------------
-      - name: Generate release keystore
-        working-directory: android
         run: |
+          npx cap sync android
+
+
+      # ============================================================
+      # 14. Generate release keystore
+      # ============================================================
+      - name: Generate release keystore
+        run: |
+
+          mkdir -p android/keystore
+
           keytool -genkeypair \
             -v \
-            -keystore fisherSafe-release.keystore \
+            -keystore android/keystore/fishersafe-release.keystore \
             -alias fishersafe \
             -keyalg RSA \
             -keysize 2048 \
@@ -146,32 +294,43 @@ jobs:
             -keypass FisherSafe123 \
             -dname "CN=FisherSafe, OU=Research, O=FisherSafe, L=Uyo, ST=Akwa Ibom, C=NG"
 
-          echo "Keystore created successfully."
-          ls -lh fisherSafe-release.keystore
+          echo ""
+          echo "===== KEYSTORE ====="
 
-      # --------------------------------------------------
-      # 12. Configure signing properties
-      # --------------------------------------------------
-      - name: Configure signing
+          ls -lh \
+            android/keystore/fishersafe-release.keystore
+
+
+      # ============================================================
+      # 15. Configure Gradle signing
+      # ============================================================
+      - name: Configure release signing
         run: |
+
           cat >> android/gradle.properties <<'EOF'
 
-          FISHERSAFE_KEYSTORE=fisherSafe-release.keystore
+          FISHERSAFE_KEYSTORE=keystore/fishersafe-release.keystore
           FISHERSAFE_KEY_ALIAS=fishersafe
           FISHERSAFE_KEYSTORE_PASSWORD=FisherSafe123
           FISHERSAFE_KEY_PASSWORD=FisherSafe123
           EOF
 
+
           python3 - <<'PY'
           from pathlib import Path
 
-          gradle_file = Path("android/app/build.gradle")
+          gradle_file = Path(
+              "android/app/build.gradle"
+          )
+
           text = gradle_file.read_text()
 
-          # Add signing configuration
-          if "signingConfigs {" not in text:
+          # --------------------------------------------------------
+          # Add signingConfigs safely.
+          # --------------------------------------------------------
+          if "FISHERSAFE_KEYSTORE" not in text:
 
-              signing = """
+              signing_config = """
               signingConfigs {
                   release {
                       storeFile file(project.findProperty("FISHERSAFE_KEYSTORE"))
@@ -184,12 +343,27 @@ jobs:
 
               text = text.replace(
                   "android {",
-                  "android {" + signing,
+                  "android {" + signing_config,
                   1
               )
 
-          # Replace release build type if necessary
+
+          # --------------------------------------------------------
+          # Add signing to BUILD TYPES.
+          #
+          # IMPORTANT:
+          # We do NOT use a generic regex for "release {"
+          # because that could accidentally modify signingConfigs.
+          # --------------------------------------------------------
+
           if "signingConfig signingConfigs.release" not in text:
+
+              marker = "buildTypes {"
+
+              if marker not in text:
+                  raise SystemExit(
+                      "ERROR: buildTypes block not found."
+                  )
 
               release_block = """
                   release {
@@ -200,56 +374,125 @@ jobs:
               """
 
               text = text.replace(
-                  "buildTypes {",
-                  "buildTypes {" + release_block,
+                  marker,
+                  marker + release_block,
                   1
               )
 
+
           gradle_file.write_text(text)
 
-          print("Release signing configuration completed.")
+          print("===== FINAL BUILD.GRADLE =====")
+          print(text)
           PY
 
-      # --------------------------------------------------
-      # 13. Verify keystore and signing configuration
-      # --------------------------------------------------
+
+      # ============================================================
+      # 16. Verify signing configuration
+      # ============================================================
       - name: Verify signing configuration
         run: |
-          echo "Checking keystore..."
-          ls -lh android/fisherSafe-release.keystore
+
+          echo "===== KEYSTORE ====="
+
+          if [ ! -f android/keystore/fishersafe-release.keystore ]; then
+            echo "ERROR: Keystore does not exist."
+            exit 1
+          fi
+
+          ls -lh \
+            android/keystore/fishersafe-release.keystore
+
 
           echo ""
-          echo "Checking Gradle properties..."
-          grep "FISHERSAFE_" android/gradle.properties
+          echo "===== GRADLE PROPERTIES ====="
+
+          grep "FISHERSAFE" \
+            android/gradle.properties
+
 
           echo ""
-          echo "Checking signing configuration..."
-          grep -n "signingConfigs" android/app/build.gradle || true
-          grep -n "signingConfig signingConfigs.release" android/app/build.gradle || true
+          echo "===== SIGNING CONFIG ====="
 
-      # --------------------------------------------------
-      # 14. Build signed release APK
-      # --------------------------------------------------
+          grep -n \
+            -A12 \
+            -B3 \
+            "signingConfigs" \
+            android/app/build.gradle || true
+
+
+          echo ""
+          echo "===== BUILD TYPES ====="
+
+          grep -n \
+            -A15 \
+            -B2 \
+            "buildTypes" \
+            android/app/build.gradle || true
+
+
+      # ============================================================
+      # 17. Build signed release APK
+      # ============================================================
       - name: Build FisherSafe release APK
         working-directory: android
         run: |
-          chmod +x gradlew
-          ./gradlew clean
-          ./gradlew assembleRelease
 
-      # --------------------------------------------------
-      # 15. Rename final APK
-      # --------------------------------------------------
+          chmod +x gradlew
+
+          ./gradlew assembleRelease --stacktrace
+
+
+      # ============================================================
+      # 18. Verify APK
+      # ============================================================
+      - name: Verify release APK
+        run: |
+
+          echo "===== GENERATED APK FILES ====="
+
+          find \
+            android/app/build/outputs/apk \
+            -type f \
+            -name "*.apk" \
+            -print
+
+
+          if [ ! -f \
+            android/app/build/outputs/apk/release/app-release.apk
+          ]; then
+
+            echo "ERROR: app-release.apk was not generated."
+            exit 1
+
+          fi
+
+
+          echo ""
+          echo "Release APK successfully generated."
+
+          ls -lh \
+            android/app/build/outputs/apk/release/app-release.apk
+
+
+      # ============================================================
+      # 19. Rename APK
+      # ============================================================
       - name: Rename APK
         run: |
-          cp android/app/build/outputs/apk/release/app-release.apk FisherSafe-release.apk
 
-          echo "Final APK created:"
+          cp \
+            android/app/build/outputs/apk/release/app-release.apk \
+            FisherSafe-release.apk
+
+          echo "===== FINAL APK ====="
+
           ls -lh FisherSafe-release.apk
 
-      # --------------------------------------------------
-      # 16. Upload final APK
-      # --------------------------------------------------
+
+      # ============================================================
+      # 20. Upload APK
+      # ============================================================
       - name: Upload FisherSafe release APK
         uses: actions/upload-artifact@v4
         with:
