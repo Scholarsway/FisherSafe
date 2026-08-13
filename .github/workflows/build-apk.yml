@@ -16,12 +16,13 @@ jobs:
         uses: actions/checkout@v4
 
       # --------------------------------------------------
-      # 2. Setup Node.js
+      # 2. Setup Node.js 24
       # --------------------------------------------------
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: npm
 
       # --------------------------------------------------
       # 3. Setup Java 21
@@ -39,9 +40,9 @@ jobs:
         run: npm install
 
       # --------------------------------------------------
-      # 5. Install TypeScript
+      # 5. Ensure TypeScript is installed
       # --------------------------------------------------
-      - name: Ensure TypeScript is installed
+      - name: Ensure TypeScript
         run: npm install --save-dev typescript
 
       # --------------------------------------------------
@@ -51,53 +52,39 @@ jobs:
         run: npx cap add android
 
       # --------------------------------------------------
-      # 7. Replace AndroidManifest.xml with valid manifest
+      # 7. Add Android permissions safely
       # --------------------------------------------------
       - name: Configure Android permissions
         run: |
-          cat > android/app/src/main/AndroidManifest.xml <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+          python3 - <<'PY'
+          from pathlib import Path
 
-              <!-- GPS / Location permissions -->
-              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-              <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+          manifest = Path("android/app/src/main/AndroidManifest.xml")
 
-              <!-- Microphone permission -->
-              <uses-permission android:name="android.permission.RECORD_AUDIO" />
+          text = manifest.read_text()
 
-              <application
-                  android:allowBackup="true"
-                  android:icon="@mipmap/ic_launcher"
-                  android:label="@string/app_name"
-                  android:roundIcon="@mipmap/ic_launcher_round"
-                  android:supportsRtl="true"
-                  android:theme="@style/AppTheme"
-                  android:usesCleartextTraffic="true">
+          permissions = [
+              '<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />',
+              '<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />',
+              '<uses-permission android:name="android.permission.RECORD_AUDIO" />'
+          ]
 
-                  <activity
-                      android:name=".MainActivity"
-                      android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
-                      android:exported="true"
-                      android:label="@string/title_activity_main"
-                      android:launchMode="singleTask"
-                      android:screenOrientation="unspecified"
-                      android:theme="@style/AppTheme.NoActionBar"
-                      android:windowSoftInputMode="adjustResize">
+          insert_position = text.find(">") + 1
 
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
+          for permission in permissions:
+              if permission not in text:
+                  text = (
+                      text[:insert_position]
+                      + "\n    "
+                      + permission
+                      + text[insert_position:]
+                  )
+                  insert_position = text.find(">") + 1
 
-                  </activity>
+          manifest.write_text(text)
 
-              </application>
-
-          </manifest>
-          EOF
-
-          echo "Valid AndroidManifest.xml created."
+          print("Android permissions configured successfully.")
+          PY
 
       # --------------------------------------------------
       # 8. Configure Java 21
@@ -107,23 +94,26 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
 
-          file = Path("android/app/build.gradle")
-          text = file.read_text()
+          gradle_file = Path("android/app/build.gradle")
+          text = gradle_file.read_text()
 
-          if "compileOptions" not in text:
-              text = text.replace(
-                  "android {",
-                  """android {
+          if "sourceCompatibility JavaVersion.VERSION_21" not in text:
 
+              compile_block = """
               compileOptions {
                   sourceCompatibility JavaVersion.VERSION_21
                   targetCompatibility JavaVersion.VERSION_21
               }
-              """,
+              """
+
+              text = text.replace(
+                  "android {",
+                  "android {" + compile_block,
                   1
               )
 
-          file.write_text(text)
+          gradle_file.write_text(text)
+
           print("Java 21 compatibility configured.")
           PY
 
@@ -140,18 +130,10 @@ jobs:
         run: npx cap sync android
 
       # --------------------------------------------------
-      # 11. Verify manifest
-      # --------------------------------------------------
-      - name: Verify Android manifest
-        run: |
-          echo "========== AndroidManifest.xml =========="
-          cat android/app/src/main/AndroidManifest.xml
-          echo "========================================"
-
-      # --------------------------------------------------
-      # 12. Generate release keystore
+      # 11. Generate release keystore INSIDE android folder
       # --------------------------------------------------
       - name: Generate release keystore
+        working-directory: android
         run: |
           keytool -genkeypair \
             -v \
@@ -164,14 +146,17 @@ jobs:
             -keypass FisherSafe123 \
             -dname "CN=FisherSafe, OU=Research, O=FisherSafe, L=Uyo, ST=Akwa Ibom, C=NG"
 
+          echo "Keystore created successfully."
+          ls -lh fisherSafe-release.keystore
+
       # --------------------------------------------------
-      # 13. Configure signing
+      # 12. Configure signing properties
       # --------------------------------------------------
-      - name: Configure release signing
+      - name: Configure signing
         run: |
           cat >> android/gradle.properties <<'EOF'
 
-          FISHERSAFE_KEYSTORE=../fisherSafe-release.keystore
+          FISHERSAFE_KEYSTORE=fisherSafe-release.keystore
           FISHERSAFE_KEY_ALIAS=fishersafe
           FISHERSAFE_KEYSTORE_PASSWORD=FisherSafe123
           FISHERSAFE_KEY_PASSWORD=FisherSafe123
@@ -180,10 +165,12 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
 
-          file = Path("android/app/build.gradle")
-          text = file.read_text()
+          gradle_file = Path("android/app/build.gradle")
+          text = gradle_file.read_text()
 
+          # Add signing configuration
           if "signingConfigs {" not in text:
+
               signing = """
               signingConfigs {
                   release {
@@ -201,49 +188,67 @@ jobs:
                   1
               )
 
+          # Replace release build type if necessary
           if "signingConfig signingConfigs.release" not in text:
+
+              release_block = """
+                  release {
+                      signingConfig signingConfigs.release
+                      minifyEnabled false
+                      shrinkResources false
+                  }
+              """
+
               text = text.replace(
                   "buildTypes {",
-                  """buildTypes {
-                      release {
-                          signingConfig signingConfigs.release
-                          minifyEnabled false
-                          shrinkResources false
-                      }
-                  """,
+                  "buildTypes {" + release_block,
                   1
               )
 
-          file.write_text(text)
-          print("Release signing configured.")
+          gradle_file.write_text(text)
+
+          print("Release signing configuration completed.")
           PY
+
+      # --------------------------------------------------
+      # 13. Verify keystore and signing configuration
+      # --------------------------------------------------
+      - name: Verify signing configuration
+        run: |
+          echo "Checking keystore..."
+          ls -lh android/fisherSafe-release.keystore
+
+          echo ""
+          echo "Checking Gradle properties..."
+          grep "FISHERSAFE_" android/gradle.properties
+
+          echo ""
+          echo "Checking signing configuration..."
+          grep -n "signingConfigs" android/app/build.gradle || true
+          grep -n "signingConfig signingConfigs.release" android/app/build.gradle || true
 
       # --------------------------------------------------
       # 14. Build signed release APK
       # --------------------------------------------------
       - name: Build FisherSafe release APK
         working-directory: android
-        run: ./gradlew assembleRelease --stacktrace
-
-      # --------------------------------------------------
-      # 15. Locate APK
-      # --------------------------------------------------
-      - name: Locate APK
         run: |
-          echo "========== APK FILES =========="
-          find android/app/build/outputs -type f -name "*.apk" -print
-          echo "==============================="
+          chmod +x gradlew
+          ./gradlew clean
+          ./gradlew assembleRelease
 
       # --------------------------------------------------
-      # 16. Rename final APK
+      # 15. Rename final APK
       # --------------------------------------------------
-      - name: Prepare final APK
+      - name: Rename APK
         run: |
           cp android/app/build/outputs/apk/release/app-release.apk FisherSafe-release.apk
+
+          echo "Final APK created:"
           ls -lh FisherSafe-release.apk
 
       # --------------------------------------------------
-      # 17. Upload final APK
+      # 16. Upload final APK
       # --------------------------------------------------
       - name: Upload FisherSafe release APK
         uses: actions/upload-artifact@v4
