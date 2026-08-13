@@ -1,4 +1,3 @@
-```yaml
 name: Build FisherSafe Signed APK
 
 on:
@@ -60,31 +59,33 @@ jobs:
           from pathlib import Path
 
           manifest = Path("android/app/src/main/AndroidManifest.xml")
-
           text = manifest.read_text()
 
           permissions = [
-              '    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />',
-              '    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />',
-              '    <uses-permission android:name="android.permission.RECORD_AUDIO" />'
+              '<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />',
+              '<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />',
+              '<uses-permission android:name="android.permission.RECORD_AUDIO" />'
           ]
 
-          manifest_start = text.find("<manifest")
-          manifest_end = text.find(">", manifest_start)
+          manifest_end = text.find(">")
+
+          additions = []
 
           for permission in permissions:
-              if permission.strip() not in text:
-                  text = (
-                      text[:manifest_end + 1]
-                      + "\n"
-                      + permission
-                      + text[manifest_end + 1:]
-                  )
-                  manifest_end = text.find(">", manifest_start)
+              if permission not in text:
+                  additions.append(permission)
+
+          if additions:
+              text = (
+                  text[:manifest_end + 1]
+                  + "\n"
+                  + "\n".join(additions)
+                  + text[manifest_end + 1:]
+              )
 
           manifest.write_text(text)
 
-          print("GPS and microphone permissions added.")
+          print("GPS and microphone permissions configured.")
           PY
 
       # --------------------------------------------------
@@ -99,7 +100,6 @@ jobs:
           text = gradle_file.read_text()
 
           if "sourceCompatibility JavaVersion.VERSION_21" not in text:
-
               block = """
               compileOptions {
                   sourceCompatibility JavaVersion.VERSION_21
@@ -117,7 +117,7 @@ jobs:
           PY
 
       # --------------------------------------------------
-      # 9. Copy website into Android
+      # 9. Copy web application
       # --------------------------------------------------
       - name: Copy web application
         run: npx cap copy android
@@ -129,7 +129,7 @@ jobs:
         run: npx cap sync android
 
       # --------------------------------------------------
-      # 11. Create release keystore
+      # 11. Generate release keystore
       # --------------------------------------------------
       - name: Generate release keystore
         run: |
@@ -145,7 +145,7 @@ jobs:
             -dname "CN=FisherSafe, OU=Research, O=FisherSafe, L=Uyo, ST=Akwa Ibom, C=NG"
 
       # --------------------------------------------------
-      # 12. Configure release signing
+      # 12. Configure signing
       # --------------------------------------------------
       - name: Configure release signing
         run: |
@@ -163,7 +163,7 @@ jobs:
           gradle_file = Path("android/app/build.gradle")
           text = gradle_file.read_text()
 
-          signing_config = """
+          signing_block = """
               signingConfigs {
                   release {
                       storeFile file(project.findProperty("FISHERSAFE_KEYSTORE"))
@@ -177,22 +177,21 @@ jobs:
           if "signingConfigs {" not in text:
               text = text.replace(
                   "android {",
-                  "android {" + signing_config,
+                  "android {" + signing_block,
                   1
               )
 
-          if "signingConfig signingConfigs.release" not in text:
-              text = text.replace(
-                  "buildTypes {",
-                  """buildTypes {
-                      release {
-                          signingConfig signingConfigs.release
-                          minifyEnabled false
-                          shrinkResources false
-                      }
-                  """,
-                  1
-              )
+          text = text.replace(
+              "buildTypes {",
+              """buildTypes {
+                  release {
+                      signingConfig signingConfigs.release
+                      minifyEnabled false
+                      shrinkResources false
+                  }
+              """,
+              1
+          )
 
           gradle_file.write_text(text)
           PY
@@ -220,4 +219,3 @@ jobs:
           name: FisherSafe-release-apk
           path: FisherSafe-release.apk
           if-no-files-found: error
-```
